@@ -11,8 +11,8 @@ def h5_nogap_data_generator(data_filename, data_path, sample_shape, batch_size):
 	while True:
 		batch = np.empty((batch_size,) + sample_shape + (1,))
 
-		z_start = np.random.randint(0, 130, batch_size)
-		z_start = z_start + (40 * (z_start >= 65))
+		z_start = np.random.randint(0, 126, batch_size)
+		z_start = z_start + (42 * (z_start >= 63))
 
 		x_start = np.random.randint(0, data.shape[1]-sample_shape[1], batch_size)
 		y_start = np.random.randint(0, data.shape[2]-sample_shape[2], batch_size)
@@ -25,4 +25,3 @@ def h5_nogap_data_generator(data_filename, data_path, sample_shape, batch_size):
 				np.s_[k, :, :, :, 0])
 
 		yield batch
-		

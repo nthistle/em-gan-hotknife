@@ -17,11 +17,11 @@ from data_utils import *
 
 
 def write_sampled_output(samp, outp, fname):
-	im = np.zeros((300, 300), dtype=np.uint8) # 10 cuts at even spacing, 5 samples, plus 5 outputs
+	im = np.zeros((320, 320), dtype=np.uint8) # 10 cuts at even spacing, 5 samples, plus 5 outputs
 	for i in range(5):
 		for j in range(10):
-			im[60*i:60*i+30,30*j:30*(j+1)] = samp[i,j,:,:]
-			im[60*i:60*i+60,30*j:30*(j+1)] = outp[i,j,:,:]
+			im[64*i:64*i+32,32*j:32*(j+1)] = samp[i,j,:,:]
+			im[64*i:64*i+32,32*j:32*(j+1)] = outp[i,j,:,:]
 	Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
 
 data_folder = "run_output/"
@@ -34,15 +34,15 @@ def main(epochs=200, batch_size=1024, lr=1e-5):
 	if not os.path.isdir(data_folder):
 		os.mkdir(data_folder)
 	
-	generator = get_generator(shape=(30,30,30))
+	generator = get_generator(shape=(32,32,32))
 
 	generator.compile(loss='binary_crossentropy', optimizer=Adam(lr))
 
 	# for sampling the data for training
-	data_gen = h5_nogap_data_generator("hotknifedata.hdf5","volumes/data", (30,30,30), batch_size)
+	data_gen = h5_nogap_data_generator("hotknifedata.hdf5","volumes/data", (32,32,32), batch_size)
 
 	# just for periodically sampling the generator to see what's going on
-	test_gen = h5_nogap_data_generator("hotknifedata.hdf5","volumes/data", (30,30,30), 5)
+	test_gen = h5_nogap_data_generator("hotknifedata.hdf5","volumes/data", (32,32,32), 5)
 
 	train_hist = []
 
