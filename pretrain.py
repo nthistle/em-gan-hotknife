@@ -34,7 +34,7 @@ def main(epochs=200, batch_size=1024, lr=1e-5):
 	if not os.path.isdir(data_folder):
 		os.mkdir(data_folder)
 	
-	generator_model = get_generator(shape=(30,30,30))
+	generator = get_generator(shape=(30,30,30))
 
 	generator.compile(loss='binary_crossentropy', optimizer=Adam(lr))
 
