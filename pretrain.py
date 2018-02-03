@@ -20,8 +20,9 @@ def write_sampled_output(samp, outp, fname):
 	im = np.zeros((320, 320), dtype=np.uint8) # 10 cuts at even spacing, 5 samples, plus 5 outputs
 	for i in range(5):
 		for j in range(10):
-			im[64*i:64*i+32,32*j:32*(j+1)] = samp[i,j,:,:]
-			im[64*i:64*i+32,32*j:32*(j+1)] = outp[i,j,:,:]
+			im[64*i:64*i+32,32*j:32*(j+1)] = (samp[i,j,:,:,0]*255).astype(np.uint8)
+			im[64*i+32:64*i+64,32*j:32*(j+1)] = (outp[i,j,:,:,0]*255).astype(np.uint8)
+	resized = imresize(im, 2.0, interp="nearest")
 	Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
 
 data_folder = "run_output/"
@@ -33,7 +34,7 @@ def main(epochs=200, batch_size=64, num_batches=32, lr=1e-5):
 
 	if not os.path.isdir(data_folder):
 		os.mkdir(data_folder)
-	
+
 	generator = get_generator(shape=(32,32,32))
 
 	generator.compile(loss='binary_crossentropy', optimizer=Adam(lr))
