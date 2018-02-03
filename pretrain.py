@@ -26,7 +26,7 @@ def write_sampled_output(samp, outp, fname):
 
 data_folder = "run_output/"
 
-def main(epochs=200, batch_size=1024, lr=1e-5):
+def main(epochs=200, batch_size=64, num_batches=32, lr=1e-5):
 
 	print("Running pretraining with %d epochs, batch size of %d")
 	print("Learning rate is %f" % lr)
@@ -48,9 +48,15 @@ def main(epochs=200, batch_size=1024, lr=1e-5):
 
 	for epoch in range(epochs):
 
-		samp = data_gen.__next__()
 
-		g_loss = generator.train_on_batch(samp, samp)
+		g_loss = 0
+
+		for n in range(num_batches):
+			samp = data_gen.__next__()
+			g_loss += generator.train_on_batch(samp, samp)
+
+		g_loss = g_loss/num_batches
+
 		#g_loss = gen_noedge.train_on_batch(latent_samp, latent_samp)
 
 		print("Epoch #%d [G loss: %f]" % (epoch+1, g_loss))
