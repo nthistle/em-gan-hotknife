@@ -10,6 +10,28 @@ from util import *
 ## latent space, then back to (32,)^3
 def get_generator(shape):
 	inp = Input(shape=(shape + (1,)))
+	layer = Conv3D(8, (3,3,3), activation="relu", padding="same")(inp)
+	layer = Conv3D(16, (3,3,3), activation="relu", padding="same")(layer)
+	layer = MaxPooling3D((2,2,2), padding="same")(layer)
+	layer = Conv3D(32, (3,3,3), activation="relu", padding="same")(layer)
+	layer = Conv3D(32, (3,3,3), activation="relu", padding="same")(layer)
+	layer = MaxPooling3D((2,2,2), padding="same")(layer)
+	layer = Conv3D(64, (3,3,3), activation="relu", padding="same")(layer)
+	encoded = layer
+	layer = Conv3D(64, (3,3,3), activation="relu", padding="same")(layer)
+	layer = UpSampling3D((2,2,2))(layer)
+	layer = Conv3D(32, (3,3,3), activation="relu", padding="same")(layer)
+	layer = Conv3D(32, (3,3,3), activation="relu", padding="same")(layer)
+	layer = UpSampling3D((2,2,2))(layer)
+	layer = Conv3D(16, (3,3,3), activation="relu", padding="same")(layer)
+	layer = Conv3D(8, (3,3,3), activation="relu", padding="same")(layer)
+	layer = Conv3D(1, (3,3,3), activation="sigmoid", padding="same")(layer)
+	decoded = layer
+	model = Model(inp, decoded)
+	return model
+
+def get_generator_bad(shape):
+	inp = Input(shape=(shape + (1,)))
 	layer = Conv3D(64, (3,3,3), activation="relu", padding="same")(inp)
 	layer = Conv3D(64, (3,3,3), activation="relu", padding="same")(layer)
 	layer = MaxPooling3D((2,2,2), padding="same")(layer)
