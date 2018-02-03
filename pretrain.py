@@ -9,6 +9,7 @@ from PIL import Image
 from scipy.misc import imresize
 import numpy as np
 import tensorflow as tf
+import os
 from util import *
 from discriminator import *
 from generator import *
@@ -23,11 +24,15 @@ def write_sampled_output(samp, outp, fname):
 			im[60*i:60*i+60,30*j:30*(j+1)] = outp[i,j,:,:]
 	Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
 
+data_folder = "run_output/"
 
 def main(epochs=200, batch_size=1024, lr=1e-5):
 
 	print("Running pretraining with %d epochs, batch size of %d")
 	print("Learning rate is %f" % lr)
+
+	if not os.path.isdir(data_folder):
+		os.mkdir(data_folder)
 	
 	generator_model = get_generator(shape=(30,30,30))
 
@@ -57,9 +62,9 @@ def main(epochs=200, batch_size=1024, lr=1e-5):
 
 		outp = generator.predict(prev)
 
-		write_sampled_output(prev, outp, "pretrain_epoch_%03d.png"%(epoch+1))
+		write_sampled_output(prev, outp, data_folder+"pretrain_epoch_%03d.png"%(epoch+1))
 
-		generator.save("generator_pretrain_epoch_%03d.h5"%(epoch+1))
+		generator.save(data_folder+"generator_pretrain_epoch_%03d.h5"%(epoch+1))
 
 if __name__ == "__main__":
 	main()
