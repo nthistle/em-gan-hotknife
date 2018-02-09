@@ -19,7 +19,7 @@ def get_discriminator(shape):
 	layer = Conv3D(64, (3,3,3), activation="relu", padding="same")(layer)
 	layer = Conv3D(64, (3,3,3), activation="relu", padding="same")(layer)
 	layer = MaxPooling3D((2,2,2), padding="same")(layer)
-	layer = Conv3D(64, (3,3,3), activation="relu", padding="same")(layer) 
+	layer = Conv3D(64, (3,3,3), activation="relu", padding="same")(layer)
 	# at this point it's 64 4x4x4 filters, consider doing fewer of larger
 	layer = Reshape((4096,))(layer)
 	layer = Dense(16, activation="relu")(layer)
