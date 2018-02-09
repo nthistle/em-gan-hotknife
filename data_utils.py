@@ -24,4 +24,4 @@ def h5_nogap_data_generator(data_filename, data_path, sample_shape, batch_size):
 				y_start[k] : y_start[k] + sample_shape[2]],
 				np.s_[k, :, :, :, 0])
 
-		yield batch
+		yield batch/255.
