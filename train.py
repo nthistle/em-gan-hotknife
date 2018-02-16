@@ -1,7 +1,7 @@
 from keras.layers import Conv2D, Conv2DTranspose, UpSampling2D, Dense, Reshape, Flatten, Activation, Input, Lambda
 from keras.models import Sequential, load_model
 from keras.layers.advanced_activations import LeakyReLU
-from keras.losses import binary_crossentropy
+from keras.losses import binary_crossentropy, mean_squared_error
 from keras.optimizers import Adam
 from keras.regularizers import L1L2
 from keras import backend as K
@@ -15,6 +15,20 @@ from discriminator import *
 from generator import *
 from data_utils import *
 import sys
+
+def get_masked_loss(batch_size):
+	mask = np.zeros((batch_size, 32, 32, 32, 1), dtype=np.float32)
+	mask[:,:8,:,:,:] = 1.0
+	mask[:,8,:,:,:] = 0.7
+	mask[:,9,:,:,:] = 0.3
+	mask[:,-8:,:,:,:] = 1.0
+	mask[:,-9,:,:,:] = 0.7
+	mask[:,-10,:,:,:] = 0.3
+	def masked_loss(y_true, y_pred):
+		y_true_masked = tf.multiply(y_true, mask)
+		y_pred_masked = tf.multiply(y_pred, mask)
+		return mean_squared_error(y_true_masked, y_pred_masked)
+	return masked_loss
 
 def write_sampled_output(samp, outp, fname):
 	im = np.zeros((320, 320), dtype=np.uint8) # 10 cuts at even spacing, 5 samples, plus 5 outputs
@@ -41,7 +55,7 @@ def main(epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6):
 
 	generator = load_model("generator_pretrain_epoch_200.h5") #get_generator(shape=(32,32,32))
 	generator.name = "model_pre"
-	generator.compile(loss='binary_crossentropy', optimizer=Adam(gen_lr))
+	generator.compile(loss=get_masked_loss(batch_size), optimizer=Adam(gen_lr))
 
 	z = Input(shape=(32,32,32,1))
 	img = generator(z)
@@ -65,6 +79,7 @@ def main(epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6):
 	for epoch in range(epochs):
 
 		g_loss = None
+		g_loss_penalty = None
 		d_loss = None
 
 		for n in range(num_batches): # do n minibatches
@@ -89,12 +104,16 @@ def main(epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6):
 
 			g_loss_new = (1./num_batches) * combined.train_on_batch(latent_samp, np.ones((batch_size, 1)))
 
+			g_loss_penalty_new = (1./num_batches) * generator.train_on_batch(latent_samp, latent_samp)
+
 			if g_loss is None:
 				g_loss = g_loss_new
+				g_loss_penalty = g_loss_penalty_new
 			else:
 				g_loss = np.add(g_loss, g_loss_new)
+				g_loss_penalty = np.add(g_loss_penalty, g_loss_penalty_new)
 
-		print("Epoch #%d [D loss: %f acc: %f] [G loss: %f]" % (epoch+1, d_loss[0], d_loss[1], g_loss))
+		print("Epoch #%d [D loss: %f acc: %f] [G loss: %f penalty: %f]" % (epoch+1, d_loss[0], d_loss[1], g_loss, g_loss_penalty))
 
 		# now save some sample input
 		prev = test_gen.__next__()
