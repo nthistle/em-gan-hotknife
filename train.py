@@ -1,5 +1,5 @@
 from keras.layers import Conv2D, Conv2DTranspose, UpSampling2D, Dense, Reshape, Flatten, Activation, Input, Lambda
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers.advanced_activations import LeakyReLU
 from keras.losses import binary_crossentropy
 from keras.optimizers import Adam
@@ -14,7 +14,7 @@ from util import *
 from discriminator import *
 from generator import *
 from data_utils import *
-
+import sys
 
 def write_sampled_output(samp, outp, fname):
 	im = np.zeros((320, 320), dtype=np.uint8) # 10 cuts at even spacing, 5 samples, plus 5 outputs
@@ -25,12 +25,13 @@ def write_sampled_output(samp, outp, fname):
 	resized = imresize(im, 2.0, interp="nearest")
 	Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
 
-data_folder = "run_output/"
+data_folder = sys.argv[1]#"run_output/"
 
-def main(epochs=200, batch_size=64, num_batches=32, disc_lr=1e-5, gen_lr=1e-5):
+#should be 32
+def main(epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6):
 
 	print("Running training with %d epochs, batch size of %d")
-	print("Learning rate is %f" % lr)
+	print("Learning rates are D:%f, G:%f" % (disc_lr,gen_lr))
 
 	if not os.path.isdir(data_folder):
 		os.mkdir(data_folder)
@@ -38,7 +39,8 @@ def main(epochs=200, batch_size=64, num_batches=32, disc_lr=1e-5, gen_lr=1e-5):
 	discriminator = get_discriminator(shape=(32,32,32))
 	discriminator.compile(loss='binary_crossentropy', optimizer=Adam(disc_lr), metrics=['accuracy'])
 
-	generator = get_generator(shape=(32,32,32))
+	generator = load_model("generator_pretrain_epoch_200.h5") #get_generator(shape=(32,32,32))
+	generator.name = "model_pre"
 	generator.compile(loss='binary_crossentropy', optimizer=Adam(gen_lr))
 
 	z = Input(shape=(32,32,32,1))
@@ -75,9 +77,9 @@ def main(epochs=200, batch_size=64, num_batches=32, disc_lr=1e-5, gen_lr=1e-5):
 
 			d_loss_real = discriminator.train_on_batch(real_data, np.ones((batch_size, 1)))
 			d_loss_fake = discriminator.train_on_batch(gen_output, np.zeros((batch_size, 1)))
-			d_loss_new = (1./n) * 0.5 * np.add(d_loss_real, d_loss_fake)
+			d_loss_new = (1./num_batches) * 0.5 * np.add(d_loss_real, d_loss_fake)
 
-			if d_loss == None:
+			if d_loss is None:
 				d_loss = d_loss_new
 			else:
 				d_loss = np.add(d_loss, d_loss_new)
@@ -85,9 +87,9 @@ def main(epochs=200, batch_size=64, num_batches=32, disc_lr=1e-5, gen_lr=1e-5):
 			# train generator
 			latent_samp = fake_gen.__next__()
 
-			g_loss_new = (1./n) * combined.train_on_batch(latent_samp, np.ones((batch_size, 1)))
+			g_loss_new = (1./num_batches) * combined.train_on_batch(latent_samp, np.ones((batch_size, 1)))
 
-			if g_loss == None:
+			if g_loss is None:
 				g_loss = g_loss_new
 			else:
 				g_loss = np.add(g_loss, g_loss_new)
