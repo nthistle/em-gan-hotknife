@@ -14,7 +14,7 @@ from util import *
 from discriminator import *
 from generator import *
 from data_utils import *
-
+import sys
 
 def write_sampled_output(samp, outp, fname):
 	im = np.zeros((640, 640), dtype=np.uint8) # 10 cuts at even spacing, 5 samples, plus 5 outputs
@@ -27,7 +27,7 @@ def write_sampled_output(samp, outp, fname):
 	#Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
 	Image.fromarray(im).save(fname)
 
-data_folder = "run_output/"
+data_folder = sys.argv[1] #"run_output/"
 
 def main(epochs=200, batch_size=64, num_batches=32, lr=1e-5):
 
