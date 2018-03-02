@@ -16,13 +16,12 @@ from generator import *
 from data_utils import *
 
 
-def write_sampled_output(samp, outp, fname):
-	im = np.zeros((320, 320), dtype=np.uint8) # 10 cuts at even spacing, 5 samples, plus 5 outputs
+def write_sampled_output(samp, outp, fname, width=16):
+	im = np.zeros((320, 32*width), dtype=np.uint8) # cuts at even spacing, 5 samples, plus 5 outputs
 	for i in range(5):
-		for j in range(10):
-			im[64*i:64*i+32,32*j:32*(j+1)] = (samp[i,j,:,:,0]*255).astype(np.uint8)
-			im[64*i+32:64*i+64,32*j:32*(j+1)] = (outp[i,j,:,:,0]*255).astype(np.uint8)
-	resized = imresize(im, 2.0, interp="nearest")
+		for j in range(width):
+			im[64*i:64*i+32,32*j:32*(j+1)] = (samp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
+			im[64*i+32:64*i+64,32*j:32*(j+1)] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
 	Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
 
 data_folder = "run_output/"
