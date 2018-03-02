@@ -43,10 +43,10 @@ def main(epochs=200, batch_size=64, num_batches=32, lr=1e-5):
 	generator.compile(loss='mean_squared_error', optimizer=Adam(lr))
 
 	# for sampling the data for training
-	data_gen = h5_nogap_data_generator_valid("hotknifedata.hdf5","volumes/data", (32,32,32), batch_size)
+	data_gen = h5_nogap_data_generator_valid("hotknifedata.hdf5","volumes/data", (64,64,64), batch_size)
 
 	# just for periodically sampling the generator to see what's going on
-	test_gen = h5_nogap_data_generator_valid("hotknifedata.hdf5","volumes/data", (32,32,32), 5)
+	test_gen = h5_nogap_data_generator_valid("hotknifedata.hdf5","volumes/data", (64,64,64), 5)
 
 	train_hist = []
 
