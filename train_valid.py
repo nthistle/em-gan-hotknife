@@ -76,6 +76,18 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1
 	# just for periodically sampling the generator to see what's going on
 	test_gen = h5_gap_data_generator_valid("hotknifedata.hdf5","volumes/data", (64,64,64), 5)
 
+
+	## Just do an "Epoch 0" test
+	latent_samp = fake_gen.__next__()
+	gen_output = generator.predict(latent_samp)
+	real_data = real_gen.__next__()
+	d_loss = 0.5 * np.add(discriminator.test_on_batch(real_data, np.ones((batch_size, 1))), discriminator.test_on_batch(gen_output, np.zeros((batch_size, 1))))
+	g_loss = combined.test_on_batch(latent_samp, np.ones((batch_size, 1)))
+	g_loss_penalty = generator.test_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
+	print("Epoch 0 [D loss: %f acc: %f] [G loss: %f penalty: %f]" % (d_loss[0], d_loss[1], g_loss, g_loss_penalty))
+	print("="*50)
+	## End our Epoch 0 stuff
+
 	for epoch in range(epochs):
 
 		g_loss = None
@@ -122,7 +134,8 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1
 
 		write_sampled_output(prev, outp, data_folder+"train_epoch_%03d.png"%(epoch+1))
 
-		generator.save(data_folder+"train_epoch_%03d.h5"%(epoch+1))
+		generator.save(data_folder+"generator_train_epoch_%03d.h5"%(epoch+1))
+		discriminator.save(data_folder+"discriminator_train_epoch_%03d.h5"%(epoch+1))
 
 
 ## Usage: python3 train_valid.py [output data folder] [generator path] [epochs] [disc_lr] [gen_lr]
