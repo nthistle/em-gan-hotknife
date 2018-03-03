@@ -127,4 +127,4 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1
 ## Usage: python3 train_valid.py [output data folder] [generator path] [epochs] [disc_lr] [gen_lr]
 if __name__ == "__main__":
 	generator_filename = sys.argv[2]
-	main(epochs=int(sys.argv[3]), disc_lr=float(sys.argv[4]), gen_lr=float(sys.argv[5]), data_folder=sys.argv[1])
+	main(generator_filename, epochs=int(sys.argv[3]), disc_lr=float(sys.argv[4]), gen_lr=float(sys.argv[5]), data_folder=sys.argv[1])
