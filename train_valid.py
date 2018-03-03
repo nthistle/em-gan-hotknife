@@ -41,7 +41,7 @@ def write_sampled_output(samp, outp, fname, width=16):
 #"run_output/"
 
 #should be 32
-def main(epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6, data_folder="run_output/"):
+def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6, data_folder="run_output/"):
 
 	print("Running training with %d epochs, batch size of %d")
 	print("Learning rates are D:%f, G:%f" % (disc_lr,gen_lr))
@@ -52,8 +52,8 @@ def main(epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6, da
 	discriminator = get_discriminator(shape=(32,32,32))
 	discriminator.compile(loss='binary_crossentropy', optimizer=Adam(disc_lr), metrics=['accuracy'])
 
-	generator = load_model("generator_pretrain_epoch_200.h5") #get_generator(shape=(32,32,32))
-	generator.name = "model_pre"
+	generator = load_model(generator_filename) #get_generator(shape=(32,32,32))
+	generator.name = "pretrained_generator"
 	generator.compile(loss=get_masked_loss(batch_size), optimizer=Adam(gen_lr))
 
 	z = Input(shape=(32,32,32,1))
@@ -67,13 +67,13 @@ def main(epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6, da
 	combined.compile(loss='binary_crossentropy', optimizer=Adam(gen_lr))
 
 	# for sampling the data for training
-	fake_gen = h5_gap_data_generator("hotknifedata.hdf5","volumes/data", (32,32,32), batch_size)
+	fake_gen = h5_gap_data_generator_valid("hotknifedata.hdf5","volumes/data", (64,64,64), batch_size)
 
 	# for training discriminator on what is real
 	real_gen = h5_nogap_data_generator("hotknifedata.hdf5","volumes/data", (32,32,32), batch_size)
 
 	# just for periodically sampling the generator to see what's going on
-	test_gen = h5_gap_data_generator("hotknifedata.hdf5","volumes/data", (32,32,32), 5)
+	test_gen = h5_gap_data_generator_valid("hotknifedata.hdf5","volumes/data", (64,64,64), 5)
 
 	for epoch in range(epochs):
 
@@ -103,7 +103,7 @@ def main(epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6, da
 
 			g_loss_new = (1./num_batches) * combined.train_on_batch(latent_samp, np.ones((batch_size, 1)))
 
-			g_loss_penalty_new = (1./num_batches) * generator.train_on_batch(latent_samp, latent_samp)
+			g_loss_penalty_new = (1./num_batches) * generator.train_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
 
 			if g_loss is None:
 				g_loss = g_loss_new
@@ -123,5 +123,8 @@ def main(epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6, da
 
 		generator.save(data_folder+"train_epoch_%03d.h5"%(epoch+1))
 
+
+## Usage: python3 train_valid.py [output data folder] [generator path] [epochs] [disc_lr] [gen_lr]
 if __name__ == "__main__":
-	main(data_folder=sys.argv[1])
+	generator_filename = sys.argv[2]
+	main(epochs=int(sys.argv[3]), disc_lr=float(sys.argv[4]), gen_lr=float(sys.argv[5]), data_folder=sys.argv[1])
