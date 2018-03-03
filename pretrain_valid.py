@@ -27,9 +27,7 @@ def write_sampled_output(samp, outp, fname, width=16):
 	#Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
 	Image.fromarray(im).save(fname)
 
-data_folder = sys.argv[1] #"run_output/"
-
-def main(epochs=200, batch_size=64, num_batches=32, lr=1e-5):
+def main(epochs=200, batch_size=64, num_batches=32, lr=1e-5, data_folder="run_output/"):
 
 	print("Running pretraining with %d epochs, batch size of %d")
 	print("Learning rate is %f" % lr)
@@ -76,4 +74,4 @@ def main(epochs=200, batch_size=64, num_batches=32, lr=1e-5):
 		generator.save(data_folder+"generator_pretrain_epoch_%03d.h5"%(epoch+1))
 
 if __name__ == "__main__":
-	main()
+	main(data_folder=sys.argv[1])
