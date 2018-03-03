@@ -56,7 +56,7 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1
 	generator.name = "pretrained_generator"
 	generator.compile(loss=get_masked_loss(batch_size), optimizer=Adam(gen_lr))
 
-	z = Input(shape=(32,32,32,1))
+	z = Input(shape=(64,64,64,1))
 	img = generator(z)
 
 	discriminator.trainable = False
