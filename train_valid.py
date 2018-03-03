@@ -31,12 +31,13 @@ def get_masked_loss(batch_size):
 	return masked_loss
 
 def write_sampled_output(samp, outp, fname, width=16):
-	im = np.zeros((320, 32*width), dtype=np.uint8) # cuts at even spacing, 5 samples, plus 5 outputs
+	im = np.zeros((640, 64*width), dtype=np.uint8) # cuts at even spacing, 5 samples, plus 5 outputs
+	im[:,:] = 255
 	for i in range(5):
 		for j in range(width):
-			im[64*i:64*i+32,32*j:32*(j+1)] = (samp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
-			im[64*i+32:64*i+64,32*j:32*(j+1)] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
-	Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
+			im[128*i:128*i+64,64*j:64*j+64] = (samp[i,round(j*64./width),:,:,0]*255).astype(np.uint8)
+			im[128*i+80:128*i+112,64*j+16:64*j+48] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
+	Image.fromarray(im).save(fname)
 
 #"run_output/"
 
