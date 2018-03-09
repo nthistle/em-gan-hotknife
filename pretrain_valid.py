@@ -23,8 +23,6 @@ def write_sampled_output(samp, outp, fname, width=16):
 		for j in range(width):
 			im[128*i:128*i+64,64*j:64*j+64] = (samp[i,round(j*64./width),:,:,0]*255).astype(np.uint8)
 			im[128*i+80:128*i+112,64*j+16:64*j+48] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
-	#resized = imresize(im, 2.0, interp="nearest")
-	#Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
 	Image.fromarray(im).save(fname)
 
 def main(epochs=200, batch_size=64, num_batches=32, lr=1e-5, data_folder="run_output/"):

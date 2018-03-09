@@ -42,7 +42,7 @@ def write_sampled_output(samp, outp, fname, width=16):
 #"run_output/"
 
 #should be 32
-def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6, data_folder="run_output/"):
+def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6, penalty_lr=1e-5, data_folder="run_output/"):
 
 	print("Running training with %d epochs, batch size of %d")
 	print("Learning rates are D:%f, G:%f" % (disc_lr,gen_lr))
@@ -56,6 +56,10 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1
 	generator = load_model(generator_filename) #get_generator(shape=(32,32,32))
 	generator.name = "pretrained_generator"
 	generator.compile(loss=get_masked_loss(batch_size), optimizer=Adam(gen_lr))
+
+	penalty_z = Input(shape=(64,64,64,1))
+	penalty = Model(penalty_z, generator(penalty_z))
+	penalty.compile(loss=get_masked_loss(batch_size), optimizer=Adam(penalty_lr))
 
 	z = Input(shape=(64,64,64,1))
 	img = generator(z)
@@ -116,7 +120,8 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1
 
 			g_loss_new = (1./num_batches) * combined.train_on_batch(latent_samp, np.ones((batch_size, 1)))
 
-			g_loss_penalty_new = (1./num_batches) * generator.train_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
+			## Now penalty instead of generator
+			g_loss_penalty_new = (1./num_batches) * penalty.train_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
 
 			if g_loss is None:
 				g_loss = g_loss_new
@@ -141,4 +146,4 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1
 ## Usage: python3 train_valid.py [output data folder] [generator path] [epochs] [disc_lr] [gen_lr]
 if __name__ == "__main__":
 	generator_filename = sys.argv[2]
-	main(generator_filename, epochs=int(sys.argv[3]), disc_lr=float(sys.argv[4]), gen_lr=float(sys.argv[5]), data_folder=sys.argv[1])
+	main(generator_filename, epochs=int(sys.argv[3]), disc_lr=float(sys.argv[4]), gen_lr=float(sys.argv[5]), penalty_lr=float(sys.argv[6]), data_folder=sys.argv[1])
