@@ -24,12 +24,12 @@ import argparse
 def get_masked_loss(batch_size):
 
 	mask = np.zeros((batch_size, 32, 32, 32, 1), dtype=np.float32)
-	mask[:,:8,:,:,:] = 1.0
-	mask[:,8,:,:,:] = 0.7
-	mask[:,9,:,:,:] = 0.3
-	mask[:,-8:,:,:,:] = 1.0
-	mask[:,-9,:,:,:] = 0.7
-	mask[:,-10,:,:,:] = 0.3
+	mask[:,:7,:,:,:] = 1.0
+	mask[:,7,:,:,:] = 0.7
+	mask[:,8,:,:,:] = 0.3
+	mask[:,-7:,:,:,:] = 1.0
+	mask[:,-8,:,:,:] = 0.7
+	mask[:,-9,:,:,:] = 0.3
 
 	def masked_loss(y_true, y_pred):
 		y_true_masked = tf.multiply(y_true, mask)
@@ -49,20 +49,25 @@ def write_sampled_output(samp, outp, fname, width=16):
 	Image.fromarray(im).save(fname)
 
 
-def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1e-7, gen_lr=1e-6, penalty_lr=1e-5, data_folder="run_output/"):
+def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
+	disc_lr=1e-7, gen_lr=1e-6, penalty_lr=1e-5, 
+	data_file="hotknifedata.hdf5", output_folder="run_output"):
 
-	print("Running training with %d epochs, batch size of %d")
-	print("Learning rates are D:%f, G:%f" % (disc_lr,gen_lr))
+	print("Running em-hotknife GAN training for %d epochs with parameters:" % epochs)
+	print("Discriminator LR: %f" % disc_lr)
+	print("Generator LR: %f", % gen_lr)
+	print("Penalty LR: %f", % penalty_lr)
+	print("Outputting data to %s" % output_folder)
 
-	if not os.path.isdir(data_folder):
-		os.mkdir(data_folder)
+	if not os.path.isdir(output_folder):
+		os.mkdir(output_folder)
 
-	discriminator = get_discriminator(shape=(32,32,32))
+	discriminator = models.get_discriminator()
 	discriminator.compile(loss='binary_crossentropy', optimizer=Adam(disc_lr), metrics=['accuracy'])
 
-	generator = load_model(generator_filename) #get_generator(shape=(32,32,32))
+	generator = load_model(generator_filename)
 	generator.name = "pretrained_generator"
-	generator.compile(loss=get_masked_loss(batch_size), optimizer=Adam(gen_lr))
+	generator.compile(loss='binary_crossentropy', optimizer=Adam(gen_lr)) # Fairly certain this doesn't get directly used anywhere
 
 	penalty_z = Input(shape=(64,64,64,1))
 	penalty = Model(penalty_z, generator(penalty_z))
@@ -79,13 +84,13 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1
 	combined.compile(loss='binary_crossentropy', optimizer=Adam(gen_lr))
 
 	# for sampling the data for training
-	fake_gen = h5_gap_data_generator_valid("hotknifedata.hdf5","volumes/data", (64,64,64), batch_size)
+	fake_gen = h5_gap_data_generator_valid(data_file,"volumes/data", (64,64,64), batch_size)
 
 	# for training discriminator on what is real
-	real_gen = h5_nogap_data_generator("hotknifedata.hdf5","volumes/data", (32,32,32), batch_size)
+	real_gen = h5_nogap_data_generator(data_file,"volumes/data", (32,32,32), batch_size)
 
 	# just for periodically sampling the generator to see what's going on
-	test_gen = h5_gap_data_generator_valid("hotknifedata.hdf5","volumes/data", (64,64,64), 5)
+	test_gen = h5_gap_data_generator_valid(data_file,"volumes/data", (64,64,64), 5)
 
 
 	## Just do an "Epoch 0" test
@@ -144,13 +149,30 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32, disc_lr=1
 
 		outp = generator.predict(prev)
 
-		write_sampled_output(prev, outp, data_folder+"train_epoch_%03d.png"%(epoch+1))
+		write_sampled_output(prev, outp, os.path.join(output_folder,"train_epoch_%03d.png"%(epoch+1)))
 
-		generator.save(data_folder+"generator_train_epoch_%03d.h5"%(epoch+1))
-		discriminator.save(data_folder+"discriminator_train_epoch_%03d.h5"%(epoch+1))
+		if epoch%5 == 0:
+			generator.save(os.path.join(output_folder,"generator_train_epoch_%03d.h5"%(epoch+1)))
+			discriminator.save(os.path.join(output_folder,"discriminator_train_epoch_%03d.h5"%(epoch+1)))
 
+def generate_argparser():
+	parser = argparse.ArgumentParser(description="Train em-hotknife GAN")
+	parser.add_argument('-g','--generator', type=str, help="pre-trained generator model (h5) to start training with", required=True)
+	parser.add_argument('-df','--datafile', type=str, help="data file (hdf5) to sample from", required=True)
+	parser.add_argument('-ne','--epochs', type=int, help="number of epochs to train for", default=50)
+	parser.add_argument('-dlr','--disc_lr', type=float, help="discriminator learning rate", required=True)
+	parser.add_argument('-glr','--gen_lr', type=float, help="generator learning rate", required=True)
+	parser.add_argument('-plr','--penalty_lr', type=float, help="generator deviation penalty learning rate", required=True)
+	parser.add_argument('-o','--output', type=str, help="folder/directory to output data to", required=True)
+	return parser
 
-## Usage: python3 train_valid.py [output data folder] [generator path] [epochs] [disc_lr] [gen_lr]
 if __name__ == "__main__":
-	generator_filename = sys.argv[2]
-	main(generator_filename, epochs=int(sys.argv[3]), disc_lr=float(sys.argv[4]), gen_lr=float(sys.argv[5]), penalty_lr=float(sys.argv[6]), data_folder=sys.argv[1])
+	args = generate_argparser().parse_args()
+	main(args.generator,
+		epochs = args.epochs,
+		disc_lr = args.disc_lr,
+		gen_lr = args.gen_lr,
+		penalty_lr = args.penalty_lr,
+		output_folder = args.output,
+		data_file = args.datafile
+		)
