@@ -3,8 +3,6 @@ from keras.models import Sequential, Model
 from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import Adam
 
-from util import *
-
 import numpy as np
 
 def get_generator(relu_leak=0.2):
@@ -30,10 +28,10 @@ def get_generator(relu_leak=0.2):
 
 	pool2 = MaxPooling3D((2,2,2))(relu2_2)
 
-	conv3 = Conv3D(64, (3,3,3))(pool2)
+	conv3 = Conv3D(96, (3,3,3))(pool2)
 	relu3 = LeakyReLU(relu_leak)(conv3)
 
-	upsamp1 = UpSampling3D((2,2,2))(relu_3)
+	upsamp1 = UpSampling3D((2,2,2))(relu3)
 
 	conv4_1 = Conv3D(48, (3,3,3))(upsamp1)
 	relu4_1 = LeakyReLU(relu_leak)(conv4_1)
@@ -78,7 +76,7 @@ def get_discriminator(relu_leak=0.2):
 
 	conv3_1 = Conv3D(64, (3,3,3))(pool2)
 	relu3_1 = LeakyReLU(relu_leak)(conv3_1)
-	conv3_2 = Conv3D(128, (1,1,1))(relu3_1)
+	conv3_2 = Conv3D(96, (1,1,1))(relu3_1)
 	relu3_2 = LeakyReLU(relu_leak)(conv3_2)
 
 	flat1 = Flatten()(relu3_2)
