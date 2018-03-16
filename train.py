@@ -151,9 +151,12 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 
 		write_sampled_output(prev, outp, os.path.join(output_folder,"train_epoch_%03d.png"%(epoch+1)))
 
-		if epoch%5 == 0:
+		if (epoch+1)%5 == 0:
 			generator.save(os.path.join(output_folder,"generator_train_epoch_%03d.h5"%(epoch+1)))
 			discriminator.save(os.path.join(output_folder,"discriminator_train_epoch_%03d.h5"%(epoch+1)))
+
+	generator.save(os.path.join(output_folder,"generator_train_final.h5"))
+	discriminator.save(os.path.join(output_folder,"discriminator_train_final.h5"))
 
 def generate_argparser():
 	parser = argparse.ArgumentParser(description="Train em-hotknife GAN")
