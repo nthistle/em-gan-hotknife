@@ -1,6 +1,9 @@
 import h5py
 import numpy as np
 
+from PIL import Image
+from scipy.misc import imresize
+
 # the gap is around depth 100 (for safety, don't use from 95 to 105)
 # so, to get our 30x30x30 block, we're going to pick random depths from 0 to 130 (excl)
 # and if it's greater than or eq to 65, we add 40 to it, to safely miss the gap

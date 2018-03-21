@@ -7,9 +7,6 @@ from keras.regularizers import L1L2
 
 from keras import backend as K
 
-from PIL import Image
-from scipy.misc import imresize
-
 from models import *
 from data_utils import *
 
@@ -38,7 +35,6 @@ def get_masked_loss(batch_size):
 		return mean_squared_error(y_true_masked, y_pred_masked)
 
 	return masked_loss
-
 
 
 def main(epochs=25, batch_size=64, num_batches=32,
@@ -95,6 +91,9 @@ def main(epochs=25, batch_size=64, num_batches=32,
 		history["g_loss"].append(g_loss)
 
 	generator.save(os.path.join(output_folder,"generator_pretrain_final.h5"))
+
+	with open(os.path.join(output_folder,"history.csv"),"w") as f:
+		pandas.DataFrame(history).reindex(columns=["epochs","g_loss"]).to_csv(f, index=False)
 
 
 def generate_argparser():

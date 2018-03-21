@@ -7,9 +7,6 @@ from keras.regularizers import L1L2
 
 from keras import backend as K
 
-from PIL import Image
-from scipy.misc import imresize
-
 from models import *
 from data_utils import *
 
@@ -17,6 +14,7 @@ import numpy as np
 import tensorflow as tf
 
 import os
+import pandas
 import sys
 import argparse
 
@@ -45,8 +43,8 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 
 	print("Running em-hotknife GAN training for %d epochs with parameters:" % epochs)
 	print("Discriminator LR: %f" % disc_lr)
-	print("Generator LR: %f", % gen_lr)
-	print("Penalty LR: %f", % penalty_lr)
+	print("Generator LR: %f" % gen_lr)
+	print("Penalty LR: %f" % penalty_lr)
 	print("Outputting data to %s" % output_folder)
 
 	if not os.path.isdir(output_folder):
@@ -93,6 +91,9 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	print("Epoch 0 [D loss: %f acc: %f] [G loss: %f penalty: %f]" % (d_loss[0], d_loss[1], g_loss, g_loss_penalty))
 	print("="*50)
 	## End our Epoch 0 stuff
+	## For now, don't bother recording 'epoch 0' in history
+
+	history = {"epoch":[], "d_loss":[], "d_acc":[], "g_loss":[], "g_penalty":[]}
 
 	for epoch in range(epochs):
 
@@ -145,9 +146,18 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 			generator.save(os.path.join(output_folder,"generator_train_epoch_%03d.h5"%(epoch+1)))
 			discriminator.save(os.path.join(output_folder,"discriminator_train_epoch_%03d.h5"%(epoch+1)))
 
+		# Update History
+		history["epoch"].append(epoch)
+		history["d_loss"].append(d_loss[0])
+		history["d_acc"].append(d_loss[1])
+		history["g_loss"].append(g_loss)
+		history["g_penalty"].append(g_loss_penalty)
+
 	generator.save(os.path.join(output_folder,"generator_train_final.h5"))
 	discriminator.save(os.path.join(output_folder,"discriminator_train_final.h5"))
-	
+
+	with open(os.path.join(output_folder,"history.csv"),"w") as f:
+		pandas.DataFrame(history).reindex(columns=["epochs","d_loss","d_acc","g_loss","g_penalty"]).to_csv(f, index=False)
 
 def generate_argparser():
 	parser = argparse.ArgumentParser(description="Train em-hotknife GAN")
