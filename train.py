@@ -157,7 +157,7 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	discriminator.save(os.path.join(output_folder,"discriminator_train_final.h5"))
 
 	with open(os.path.join(output_folder,"history.csv"),"w") as f:
-		pandas.DataFrame(history).reindex(columns=["epochs","d_loss","d_acc","g_loss","g_penalty"]).to_csv(f, index=False)
+		pandas.DataFrame(history).reindex(columns=["epoch","d_loss","d_acc","g_loss","g_penalty"]).to_csv(f, index=False)
 
 def generate_argparser():
 	parser = argparse.ArgumentParser(description="Train em-hotknife GAN")

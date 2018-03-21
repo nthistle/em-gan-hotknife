@@ -93,7 +93,7 @@ def main(epochs=25, batch_size=64, num_batches=32,
 	generator.save(os.path.join(output_folder,"generator_pretrain_final.h5"))
 
 	with open(os.path.join(output_folder,"history.csv"),"w") as f:
-		pandas.DataFrame(history).reindex(columns=["epochs","g_loss"]).to_csv(f, index=False)
+		pandas.DataFrame(history).reindex(columns=["epoch","g_loss"]).to_csv(f, index=False)
 
 
 def generate_argparser():
