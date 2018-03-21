@@ -39,16 +39,6 @@ def get_masked_loss(batch_size):
 	return masked_loss
 
 
-def write_sampled_output(samp, outp, fname, width=16):
-	im = np.zeros((640, 64*width), dtype=np.uint8) # cuts at even spacing, 5 samples, plus 5 outputs
-	im[:,:] = 255
-	for i in range(5):
-		for j in range(width):
-			im[128*i:128*i+64,64*j:64*j+64] = (samp[i,round(j*64./width),:,:,0]*255).astype(np.uint8)
-			im[128*i+80:128*i+112,64*j+16:64*j+48] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
-	Image.fromarray(im).save(fname)
-
-
 def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	disc_lr=1e-7, gen_lr=1e-6, penalty_lr=1e-5, 
 	data_file="hotknifedata.hdf5", output_folder="run_output"):
@@ -149,7 +139,7 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 
 		outp = generator.predict(prev)
 
-		write_sampled_output(prev, outp, os.path.join(output_folder,"train_epoch_%03d.png"%(epoch+1)))
+		write_sampled_output_even(prev, outp, os.path.join(output_folder,"train_epoch_%03d.png"%(epoch+1)))
 
 		if (epoch+1)%5 == 0:
 			generator.save(os.path.join(output_folder,"generator_train_epoch_%03d.h5"%(epoch+1)))
@@ -157,6 +147,7 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 
 	generator.save(os.path.join(output_folder,"generator_train_final.h5"))
 	discriminator.save(os.path.join(output_folder,"discriminator_train_final.h5"))
+	
 
 def generate_argparser():
 	parser = argparse.ArgumentParser(description="Train em-hotknife GAN")

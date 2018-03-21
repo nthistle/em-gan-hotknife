@@ -97,3 +97,27 @@ def h5_gap_data_generator_valid(data_filename, data_path, sample_shape, batch_si
 				np.s_[k, :, :, :, 0])
 
 		yield batch/255.
+
+
+
+def write_sampled_output(samp, outp, fname, width=16):
+	im = np.zeros((640, 64*width), dtype=np.uint8) # cuts at even spacing, 5 samples, plus 5 outputs
+	im[:,:] = 255
+	for i in range(5):
+		for j in range(width):
+			im[128*i:128*i+64,64*j:64*j+64] = (samp[i,round(j*64./width),:,:,0]*255).astype(np.uint8)
+			im[128*i+80:128*i+112,64*j+16:64*j+48] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
+	Image.fromarray(im).save(fname)
+
+
+## Same as the other one, just visually slightly different
+## (only takes the center piece of samp)
+def write_sampled_output_even(samp, outp, fname, width=16):
+	im = np.zeros((320, 32*width), dtype=np.uint8) # cuts at even spacing, 5 samples, plus 5 outputs
+	samp = get_center_of_valid_block(samp)
+	im[:,:] = 255
+	for i in range(5):
+		for j in range(width):
+			im[64*i:64*i+32,32*j:32*j+32] = (samp[i,round(j*64./width),:,:,0]*255).astype(np.uint8)
+			im[64*i+32:64*i+64,32*j+32:32*j+64] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
+	Image.fromarray(im).save(fname)
