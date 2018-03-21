@@ -123,4 +123,4 @@ def write_sampled_output_even(samp, outp, fname, width=16):
 		for j in range(width):
 			im[64*i:64*i+32,32*j:32*j+32] = (samp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
 			im[64*i+32:64*i+64,32*j:32*j+32] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
-	Image.fromarray(im).save(fname)
+	Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
