@@ -44,7 +44,7 @@ def main(epochs=25, batch_size=64, num_batches=32,
 	gen_lr=1e-6, data_file="hotknifedata.hdf5", output_folder="run_output"):
 
 	print("Running em-hotknife GAN pre-training for %d epochs with parameters:" % epochs)
-	print("Generator LR: %f", % gen_lr)
+	print("Generator LR: %f" % gen_lr)
 
 	if not os.path.isdir(output_folder):
 		os.mkdir(output_folder)
@@ -57,16 +57,7 @@ def main(epochs=25, batch_size=64, num_batches=32,
 
 	# for sampling pretrained generator
 	test_gen = h5_nogap_data_generator_valid(data_file, "volumes/data", (64,64,64), 5)
-
-
-	## Just do an "Epoch 0" test
-	latent_samp = fake_gen.__next__()
-	gen_output = generator.predict(latent_samp)
-	real_data = real_gen.__next__()
-	g_loss = generator.test_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
-	print("Epoch 0 [D loss: %f acc: %f] [G loss: %f penalty: %f]" % (d_loss[0], d_loss[1], g_loss, g_loss_penalty))
-	print("="*50)
-	## End our Epoch 0 stuff
+	
 
 	for epoch in range(epochs):
 
@@ -110,9 +101,7 @@ def generate_argparser():
 
 if __name__ == "__main__":
 	args = generate_argparser().parse_args()
-	main(args.generator,
-		epochs = args.epochs,
+	main(epochs = args.epochs,
 		gen_lr = args.gen_lr,
 		output_folder = args.output,
-		data_file = args.datafile
-		)
+		data_file = args.datafile)
