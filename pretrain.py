@@ -17,6 +17,7 @@ import numpy as np
 import tensorflow as tf
 
 import os
+import pandas
 import sys
 import argparse
 
@@ -57,7 +58,8 @@ def main(epochs=25, batch_size=64, num_batches=32,
 
 	# for sampling pretrained generator
 	test_gen = h5_nogap_data_generator_valid(data_file, "volumes/data", (64,64,64), 5)
-	
+
+	history = {"epoch":[], "g_loss":[]}
 
 	for epoch in range(epochs):
 
@@ -69,7 +71,7 @@ def main(epochs=25, batch_size=64, num_batches=32,
 			pret_samp = real_gen.__next__()
 
 			## Now penalty instead of generator
-			g_loss_new = (1./num_batches) * penalty.train_on_batch(pret_samp, get_center_of_valid_block(pret_samp))
+			g_loss_new = (1./num_batches) * generator.train_on_batch(pret_samp, get_center_of_valid_block(pret_samp))
 
 			if g_loss is None:
 				g_loss = g_loss_new
@@ -87,6 +89,10 @@ def main(epochs=25, batch_size=64, num_batches=32,
 
 		if (epoch+1)%5 == 0:
 			generator.save(os.path.join(output_folder,"generator_pretrain_epoch_%03d.h5"%(epoch+1)))
+
+		# Update History
+		history["epoch"].append(epoch)
+		history["g_loss"].append(g_loss)
 
 	generator.save(os.path.join(output_folder,"generator_pretrain_final.h5"))
 
