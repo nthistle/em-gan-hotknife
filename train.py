@@ -105,8 +105,9 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 
 	# just for periodically sampling the generator to see what's going on
 	test_gen = h5_gap_data_generator_valid(data_file,"volumes/data", (64,64,64), 5)
+	common_test_gen = h5_gap_data_generator_valid(data_file, "volumes/data", (64,64,64), 15)
 
-	common_test = test_gen.__next__()  ## Will sample this same one every epoch to better see what it's learning
+	common_test = common_test_gen.__next__()  ## Will sample this same one every epoch to better see what it's learning
 
 
 	## Once we've had 3+ "critical" epochs (where discriminator loss is much lower than generator loss), terminate training early
