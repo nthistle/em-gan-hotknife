@@ -36,9 +36,12 @@ def get_masked_loss(batch_size):
 
 	return masked_loss
 
+def apply_noise(samp):
+	return np.clip(samp + np.random.normal(0.0, 0.03, size=samp.shape), 0.0, 1.0)
+
 
 def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
-	disc_lr=1e-7, gen_lr=1e-6, penalty_lr=1e-5, 
+	disc_lr=1e-7, gen_lr=1e-6, penalty_lr=1e-5, num_passive=2,
 	data_file="hotknifedata.hdf5", output_folder="run_output"):
 
 	print("Running em-hotknife GAN training for %d epochs with parameters:" % epochs)
@@ -107,6 +110,9 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 			latent_samp = fake_gen.__next__() # input to generator
 			gen_output = generator.predict(latent_samp)
 
+			gen_output = apply_noise(gen_output) # instance noise, sorta
+			# hopefully helps a little bit?
+
 			real_data = real_gen.__next__()
 
 			d_loss_real = discriminator.train_on_batch(real_data, np.ones((batch_size, 1)))
@@ -121,10 +127,16 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 			# train generator
 			latent_samp = fake_gen.__next__()
 
-			g_loss_new = (1./num_batches) * combined.train_on_batch(latent_samp, np.ones((batch_size, 1)))
+			if epoch < num_passive:
+				g_loss_new = (1./num_batches) * combined.test_on_batch(latent_samp, np.ones((batch_size, 1)))
+			else:
+				g_loss_new = (1./num_batches) * combined.train_on_batch(latent_samp, np.ones((batch_size, 1)))
 
 			## Now penalty instead of generator
-			g_loss_penalty_new = (1./num_batches) * penalty.train_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
+			if epoch < num_passive:
+				g_loss_penalty_new = (1./num_batches) * penalty.test_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
+			else:
+				g_loss_penalty_new = (1./num_batches) * penalty.train_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
 
 			if g_loss is None:
 				g_loss = g_loss_new
@@ -139,6 +151,8 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 		prev = test_gen.__next__()
 
 		outp = generator.predict(prev)
+
+		outp = apply_noise(outp)
 
 		write_sampled_output_even(prev, outp, os.path.join(output_folder,"train_epoch_%03d.png"%(epoch+1)))
 
@@ -173,6 +187,7 @@ def generate_argparser():
 if __name__ == "__main__":
 	args = generate_argparser().parse_args()
 	main(args.generator,
+                batch_size = 32, ## Temporary, half as large
 		epochs = args.epochs,
 		disc_lr = args.disc_lr,
 		gen_lr = args.gen_lr,
