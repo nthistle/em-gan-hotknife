@@ -115,6 +115,7 @@ def write_sampled_output(samp, outp, fname, width=16):
 
 ## Same as the other one, just visually slightly different
 ## (only takes the center piece of samp)
+## For use with 5 SAMPLES
 def write_sampled_output_even(samp, outp, fname, width=16):
 	im = np.zeros((320, 32*width), dtype=np.uint8) # cuts at even spacing, 5 samples, plus 5 outputs
 	samp = get_center_of_valid_block(samp)
@@ -124,3 +125,17 @@ def write_sampled_output_even(samp, outp, fname, width=16):
 			im[64*i:64*i+32,32*j:32*j+32] = (samp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
 			im[64*i+32:64*i+64,32*j:32*j+32] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
 	Image.fromarray(imresize(im, 2.0, interp="nearest")).save(fname)
+
+
+## Same as the other one, just visually slightly different
+## (only takes the center piece of samp)
+## For use with 15 SAMPLES
+def write_sampled_output_even_large(samp, outp, fname, width=16):
+	im = np.zeros((960, 32*width), dtype=np.uint8) # cuts at even spacing, 5 samples, plus 5 outputs
+	samp = get_center_of_valid_block(samp)
+	im[:,:] = 255
+	for i in range(15):
+		for j in range(width):
+			im[64*i:64*i+32,32*j:32*j+32] = (samp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
+			im[64*i+32:64*i+64,32*j:32*j+32] = (outp[i,round(j*32./width),:,:,0]*255).astype(np.uint8)
+	Image.fromarray(im).save(fname)
