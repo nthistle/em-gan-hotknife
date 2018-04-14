@@ -87,7 +87,7 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	real_data = real_gen.__next__()
 	d_loss = 0.5 * np.add(discriminator.test_on_batch(real_data, np.ones((batch_size, 1))), discriminator.test_on_batch(gen_output, np.zeros((batch_size, 1))))
 	g_loss = combined.test_on_batch(latent_samp, np.ones((batch_size, 1)))
-	g_loss_penalty = generator.test_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
+	g_loss_penalty = penalty.test_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
 	print("Epoch 0 [D loss: %f acc: %f] [G loss: %f penalty: %f]" % (d_loss[0], d_loss[1], g_loss, g_loss_penalty))
 	print("="*50)
 	## End our Epoch 0 stuff
