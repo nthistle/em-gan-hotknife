@@ -108,6 +108,11 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 
 	common_test = test_gen.__next__()  ## Will sample this same one every epoch to better see what it's learning
 
+
+	## Once we've had 3+ "critical" epochs (where discriminator loss is much lower than generator loss), terminate training early
+	CRITICAL_EPOCH_THRESH = 3
+	critical_epochs = 0
+
 	## Just do an "Epoch 0" test
 	latent_samp = fake_gen.__next__()
 	gen_output = generator.predict(latent_samp)
@@ -172,6 +177,11 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 
 		print("Epoch #%d [D loss: %f acc: %f] [G loss: %f penalty: %f]" % (epoch+1, d_loss[0], d_loss[1], g_loss, g_loss_penalty))
 
+		if epoch > num_passive + CRITICAL_EPOCH_THRESH and (g_loss/d_loss[0]) > 2.0:
+			critical_epochs += 1
+		else:
+			critical_epochs = 0
+
 		# now save some sample input
 		prev = test_gen.__next__()
 
@@ -195,6 +205,10 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 		history["d_acc"].append(d_loss[1])
 		history["g_loss"].append(g_loss)
 		history["g_penalty"].append(g_loss_penalty)
+
+		if critical_epochs > CRITICAL_EPOCH_THRESH:
+			print("[INFO] SHORT CIRCUITING TRAINING! g_loss > 2*d_loss for 3+ epochs!")
+			break
 
 	generator.save(os.path.join(output_folder,"generator_train_final.h5"))
 	discriminator.save(os.path.join(output_folder,"discriminator_train_final.h5"))
