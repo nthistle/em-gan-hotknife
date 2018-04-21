@@ -21,6 +21,7 @@ def main(generator_filename, datafile, z_level, output):
 	for x in range(0, data.shape[1]-64, 32):
 		for y in range(0, data.shape[2]-64, 32):
 			block = data[z_level:z_level+64,x:x+64,y:y+64]/255.
+			block = np.reshape(block, (32, 32, 32, 1))
 			pred = generator.predict(np.array([block]))
 			predicted[z_level+16:z_level+48,x+16:x+48,y+16:y+48] = (255*pred[0]).astype(data.dtype)
 
