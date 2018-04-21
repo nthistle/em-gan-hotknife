@@ -25,7 +25,7 @@ def main(generator_filename, datafile, z_level, output):
 			predicted[z_level+16:z_level+48,x+16:x+48,y+16:y+48] = (255*pred[0]).astype(data.dtype)
 
 	for z in range(32):
-		Image.fromarray(predicted[z]).save("%02d.tiff" % z)
+		Image.fromarray(predicted[z]).save(os.path.join(output,"%02d.tiff" % z))
 
 
 def generate_argparser():
