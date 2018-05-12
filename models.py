@@ -60,31 +60,31 @@ def get_discriminator(relu_leak=0.2):
 	"""
 	input_layer = Input(shape = (32,32,32,1))
 
-	conv1_1 = Conv3D(16, (3,3,3))(input_layer)
-	relu1_1 = LeakyReLU(relu_leak)(conv1_1)
-	conv1_2 = Conv3D(32, (3,3,3))(relu1_1)
-	relu1_2 = LeakyReLU(relu_leak)(conv1_2)
+	conv1_1 = Conv3D(16, (3,3,3), name="conv1_1")(input_layer)
+	relu1_1 = LeakyReLU(relu_leak, name="relu1_1")(conv1_1)
+	conv1_2 = Conv3D(32, (3,3,3), name="conv1_2")(relu1_1)
+	relu1_2 = LeakyReLU(relu_leak, name="relu1_2")(conv1_2)
 
-	pool1 = MaxPooling3D((2,2,2))(relu1_2)
+	pool1 = MaxPooling3D((2,2,2), name="pool1")(relu1_2)
 
-	conv2_1 = Conv3D(32, (3,3,3))(pool1)
-	relu2_1 = LeakyReLU(relu_leak)(conv2_1)
-	conv2_2 = Conv3D(64, (3,3,3))(relu2_1)
-	relu2_2 = LeakyReLU(relu_leak)(conv2_2)
+	conv2_1 = Conv3D(32, (3,3,3), name="conv2_1")(pool1)
+	relu2_1 = LeakyReLU(relu_leak, name="relu2_1")(conv2_1)
+	conv2_2 = Conv3D(64, (3,3,3), name="conv2_2")(relu2_1)
+	relu2_2 = LeakyReLU(relu_leak, name="relu2_2")(conv2_2)
 
-	pool2 = MaxPooling3D((2,2,2))(relu2_2)
+	pool2 = MaxPooling3D((2,2,2), name="pool2")(relu2_2)
 
-	conv3_1 = Conv3D(64, (3,3,3))(pool2)
-	relu3_1 = LeakyReLU(relu_leak)(conv3_1)
-	conv3_2 = Conv3D(96, (1,1,1))(relu3_1)
-	relu3_2 = LeakyReLU(relu_leak)(conv3_2)
+	conv3_1 = Conv3D(64, (3,3,3), name="conv3_1")(pool2)
+	relu3_1 = LeakyReLU(relu_leak, name="relu3_1")(conv3_1)
+	conv3_2 = Conv3D(96, (1,1,1),  name="conv3_2")(relu3_1)
+	relu3_2 = LeakyReLU(relu_leak, name="relu3_2")(conv3_2)
 
-	flat1 = Flatten()(relu3_2)
+	flat1 = Flatten(name="flat1")(relu3_2)
 
-	dense1 = Dense(32)(flat1)
-	relu4 = LeakyReLU(relu_leak)(dense1)
+	dense1 = Dense(32, name="dense1")(flat1)
+	relu4 = LeakyReLU(relu_leak, name="relu4")(dense1)
 
-	dense2 = Dense(1, activation="sigmoid")(relu4)
+	dense2 = Dense(1, activation="sigmoid", name="dense2")(relu4)
 	output_layer = dense2
 
 	return Model(input_layer, output_layer)
