@@ -7,10 +7,11 @@ import numpy as np
 
 def get_generator(relu_leak=0.2, skip_connections=False):
 	"""Returns valid-padded small generator, mapping 64x64x64 input to 32x32x32 output.
-	Architecture is similar to an autoencoder; no skip connections.
+	Architecture is similar to an autoencoder, with skip connections similar to a U-net if enabled.
 
 	Keyword arguments:
 	relu_leak -- Alpha parameter to the LeakyReLU layers
+	skip_connections -- Determines whether to use skip connections or not
 	"""
 	input_layer = Input(shape = (64,64,64,1))
 
