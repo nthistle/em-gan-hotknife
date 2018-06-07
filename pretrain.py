@@ -37,7 +37,7 @@ def get_masked_loss(batch_size):
 	return masked_loss
 
 
-def main(epochs=25, batch_size=64, num_batches=32,
+def main(epochs=25, batch_size=64, num_batches=32, batch_norm=False, skip_conn=False,
 	gen_lr=1e-6, data_file="hotknifedata.hdf5", output_folder="run_output"):
 
 	print("Running em-hotknife GAN pre-training for %d epochs with parameters:" % epochs)
@@ -46,7 +46,7 @@ def main(epochs=25, batch_size=64, num_batches=32,
 	if not os.path.isdir(output_folder):
 		os.mkdir(output_folder)
 
-	generator = get_generator()
+	generator = get_generator(skip_connections=skip_conn, batch_norm=batch_norm)
 	generator.compile(loss='mean_squared_error', optimizer=Adam(gen_lr))
 
 	# for pretraining generator
@@ -95,6 +95,13 @@ def main(epochs=25, batch_size=64, num_batches=32,
 	with open(os.path.join(output_folder,"history.csv"),"w") as f:
 		pandas.DataFrame(history).reindex(columns=["epoch","g_loss"]).to_csv(f, index=False)
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 def generate_argparser():
 	parser = argparse.ArgumentParser(description="Train em-hotknife GAN")
@@ -102,6 +109,8 @@ def generate_argparser():
 	parser.add_argument('-ne','--epochs', type=int, help="number of epochs to train for", default=50)
 	parser.add_argument('-glr','--gen_lr', type=float, help="generator learning rate", required=True)
 	parser.add_argument('-o','--output', type=str, help="folder/directory to output data to", required=True)
+	parser.add_argument('--batchnorm', type=str2bool, nargs="?", const=True, default=False, help="whether to use batch norm in generator")
+	parser.add_argument('--skipconn', type=str2bool, nargs="?", const=True, default=False, help="whether to use skip connections in generator")
 	return parser
 
 if __name__ == "__main__":
@@ -109,4 +118,6 @@ if __name__ == "__main__":
 	main(epochs = args.epochs,
 		gen_lr = args.gen_lr,
 		output_folder = args.output,
-		data_file = args.datafile)
+		data_file = args.datafile,
+		batch_norm = args.batchnorm,
+		skip_conn = args.skipconn)

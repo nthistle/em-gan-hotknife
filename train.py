@@ -42,7 +42,7 @@ def apply_noise(samp, std_dev=0.03):
 
 def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	disc_lr=1e-7, gen_lr=1e-6, penalty_lr=1e-5, num_passive=2, noise=0.0,
-	disc_optim="adam", gen_optim="adam", pen_optim="adam",
+	disc_optim="adam", gen_optim="adam", pen_optim="adam", batch_norm=False,
 	data_file="hotknifedata.hdf5", output_folder="run_output"):
 
 	disc_optim = disc_optim.lower()
@@ -76,7 +76,7 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	elif pen_optim == "sgd":
 		penalty_optimizer = SGD(penalty_lr)
 
-	discriminator = get_discriminator()
+	discriminator = get_discriminator(batch_norm=batch_norm)
 	discriminator.compile(loss='binary_crossentropy', optimizer=discriminator_optimizer, metrics=['accuracy'])
 
 	generator = load_model(generator_filename)
@@ -217,6 +217,14 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	with open(os.path.join(output_folder,"history.csv"),"w") as f:
 		pandas.DataFrame(history).reindex(columns=["epoch","d_loss","d_acc","g_loss","g_penalty"]).to_csv(f, index=False)
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 def generate_argparser():
 	parser = argparse.ArgumentParser(description="Train em-hotknife GAN")
 	parser.add_argument('-g','--generator', type=str, help="pre-trained generator model (h5) to start training with", required=True)
@@ -231,6 +239,7 @@ def generate_argparser():
 	parser.add_argument('-glr','--gen_lr', type=float, help="generator learning rate", required=True)
 	parser.add_argument('-plr','--penalty_lr', type=float, help="generator deviation penalty learning rate", required=True)
 	parser.add_argument('-o','--output', type=str, help="folder/directory to output data to", required=True)
+	parser.add_argument('--batch_norm', type=str2bool, nargs="?", const=True, help="whether to use batch norm in discriminator", default=False)
 	return parser
 
 if __name__ == "__main__":
@@ -247,5 +256,6 @@ if __name__ == "__main__":
 		pen_optim = args.pen_opt,
 		num_passive = args.num_passive,
 		output_folder = args.output,
-		data_file = args.datafile
+		data_file = args.datafile,
+		batch_norm = args.batch_norm
 		)
