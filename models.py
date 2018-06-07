@@ -1,11 +1,11 @@
-from keras.layers import Conv3D, Conv3DTranspose, UpSampling3D, Dense, Reshape, Flatten, Activation, Input, MaxPooling3D, Cropping3D, Concatenate
+from keras.layers import Conv3D, Conv3DTranspose, UpSampling3D, Dense, Reshape, Flatten, Activation, Input, MaxPooling3D, Cropping3D, Concatenate, BatchNormalization
 from keras.models import Sequential, Model
 from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import Adam
 
 import numpy as np
 
-def get_generator(relu_leak=0.2, skip_connections=False):
+def get_generator(relu_leak=0.2, skip_connections=False, batch_norm=False):
 	"""Returns valid-padded small generator, mapping 64x64x64 input to 32x32x32 output.
 	Architecture is similar to an autoencoder, with skip connections similar to a U-net if enabled.
 
@@ -22,7 +22,12 @@ def get_generator(relu_leak=0.2, skip_connections=False):
 	conv1_2 = Conv3D(16, (3,3,3), name="conv1_2")(relu1_1)
 	relu1_2 = LeakyReLU(relu_leak, name="relu1_2")(conv1_2)
 
-	pool1 = MaxPooling3D((2,2,2), name="pool1")(relu1_2)
+	if batch_norm:
+		bn1 = BatchNormalization(momentum=0.8, name="bn1")(relu1_2)
+		pool1 = MaxPooling3D((2,2,2), name="pool1")(bn1)
+	else:
+		pool1 = MaxPooling3D((2,2,2), name="pool1")(relu1_2)
+
 
 	stage2_in = pool1 # feeds into 'stage 2' of the network
 
@@ -31,14 +36,24 @@ def get_generator(relu_leak=0.2, skip_connections=False):
 	conv2_2 = Conv3D(48, (3,3,3), name="conv2_2")(relu2_1)
 	relu2_2 = LeakyReLU(relu_leak, name="relu2_2")(conv2_2)
 
-	pool2 = MaxPooling3D((2,2,2), name="pool2")(relu2_2)
+	if batch_norm:
+		bn2 = BatchNormalization(momentum=0.8, name="bn2")(relu2_2)
+		pool2 = MaxPooling3D((2,2,2), name="pool2")(bn2)
+	else:
+		pool2 = MaxPooling3D((2,2,2), name="pool2")(relu2_2)
+
 
 	stage3_in = pool2 # feeds into 'stage 3' of the network
 
 	conv3 = Conv3D(96, (3,3,3), name="conv3")(stage3_in)
 	relu3 = LeakyReLU(relu_leak, name="relu3")(conv3)
 
-	upsamp1 = UpSampling3D((2,2,2), name="upsamp1")(relu3)
+	if batch_norm:
+		bn3 = BatchNormalization(momentum=0.8, name="bn3")(relu3)
+		upsamp1 = UpSampling3D((2,2,2), name="upsamp1")(bn3)
+	else:
+		upsamp1 = UpSampling3D((2,2,2), name="upsamp1")(relu3)
+
 
 	stage4_in = upsamp1 # feeds into 'stage 4' of the network
 
@@ -51,7 +66,12 @@ def get_generator(relu_leak=0.2, skip_connections=False):
 	conv4_2 = Conv3D(32, (3,3,3), name="conv4_2")(relu4_1)
 	relu4_2 = LeakyReLU(relu_leak, name="relu4_2")(conv4_2)
 
-	upsamp2 = UpSampling3D((2,2,2), name="upsamp2")(relu4_2)
+	if batch_norm:
+		bn4 = BatchNormalization(momentum=0.8, name="bn4")(relu4_2)
+		upsamp2 = UpSampling3D((2,2,2), name="upsamp2")(bn4)
+	else:
+		upsamp2 = UpSampling3D((2,2,2), name="upsamp2")(relu4_2)
+
 
 	stage5_in = upsamp2 # feeds into 'stage 5' of the network
 
@@ -70,7 +90,7 @@ def get_generator(relu_leak=0.2, skip_connections=False):
 	return Model(input_layer, output_layer)
 
 
-def get_discriminator(relu_leak=0.2):
+def get_discriminator(relu_leak=0.2, batch_norm=False):
 	"""Returns small discriminator, mapping 32x32x32 into a single output prediction.
 	Architecture is fairly standard, two layers of convolutions between max pooling layers.
 
@@ -84,14 +104,23 @@ def get_discriminator(relu_leak=0.2):
 	conv1_2 = Conv3D(32, (3,3,3), name="conv1_2")(relu1_1)
 	relu1_2 = LeakyReLU(relu_leak, name="relu1_2")(conv1_2)
 
-	pool1 = MaxPooling3D((2,2,2), name="pool1")(relu1_2)
+	if batch_norm:
+		bn1 = BatchNormalization(momentum=0.8, name="bn1")(relu1_2)
+		pool1 = MaxPooling3D((2,2,2), name="pool1")(bn1)
+	else:
+		pool1 = MaxPooling3D((2,2,2), name="pool1")(relu1_2)
 
 	conv2_1 = Conv3D(32, (3,3,3), name="conv2_1")(pool1)
 	relu2_1 = LeakyReLU(relu_leak, name="relu2_1")(conv2_1)
 	conv2_2 = Conv3D(64, (3,3,3), name="conv2_2")(relu2_1)
 	relu2_2 = LeakyReLU(relu_leak, name="relu2_2")(conv2_2)
 
-	pool2 = MaxPooling3D((2,2,2), name="pool2")(relu2_2)
+
+	if batch_norm:
+		bn2 = BatchNormalization(momentum=0.8, name="bn2")(relu2_2)
+		pool2 = MaxPooling3D((2,2,2), name="pool2")(bn2)
+	else:
+		pool2 = MaxPooling3D((2,2,2), name="pool2")(relu2_2)
 
 	conv3_1 = Conv3D(64, (3,3,3), name="conv3_1")(pool2)
 	relu3_1 = LeakyReLU(relu_leak, name="relu3_1")(conv3_1)
