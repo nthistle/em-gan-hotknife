@@ -43,6 +43,7 @@ def apply_noise(samp, std_dev=0.03):
 def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	disc_lr=1e-7, gen_lr=1e-6, penalty_lr=1e-5, num_passive=2, noise=0.0,
 	disc_optim="adam", gen_optim="adam", pen_optim="adam", batch_norm=False,
+	lower_noise = False,
 	data_file="hotknifedata.hdf5", output_folder="run_output"):
 
 	disc_optim = disc_optim.lower()
@@ -128,8 +129,13 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 
 	history = {"epoch":[], "d_loss":[], "d_acc":[], "g_loss":[], "g_penalty":[]}
 
+	current_noise = noise
+
 	for epoch in range(epochs):
 
+		if lower_noise:
+			current_noise = max(min(noise * (1 - 2*(epoch-(epochs/4))/epochs),1),0)
+		
 		g_loss = None
 		g_loss_penalty = None
 		d_loss = None
@@ -140,8 +146,8 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 			latent_samp = fake_gen.__next__() # input to generator
 			gen_output = generator.predict(latent_samp)
 
-			if noise > 0.0:
-				gen_output = apply_noise(gen_output, noise) # instance noise, sorta
+			if current_noise > 0.0:
+				gen_output = apply_noise(gen_output, current_noise) # instance noise, sorta
 			# hopefully helps a little bit?
 
 			real_data = real_gen.__next__()
@@ -240,6 +246,7 @@ def generate_argparser():
 	parser.add_argument('-plr','--penalty_lr', type=float, help="generator deviation penalty learning rate", required=True)
 	parser.add_argument('-o','--output', type=str, help="folder/directory to output data to", required=True)
 	parser.add_argument('--batch_norm', type=str2bool, nargs="?", const=True, help="whether to use batch norm in discriminator", default=False)
+	parser.add_argument('--lower_noise', type=str2bool, nargs="?", const=True, help="whether to slowly lower the instance noise during training", default=False)
 	return parser
 
 if __name__ == "__main__":
@@ -257,5 +264,6 @@ if __name__ == "__main__":
 		num_passive = args.num_passive,
 		output_folder = args.output,
 		data_file = args.datafile,
-		batch_norm = args.batch_norm
+		batch_norm = args.batch_norm,
+		lower_noise = args.lower_noise
 		)
