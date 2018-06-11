@@ -200,7 +200,7 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 			common_outp = apply_noise(common_outp, noise)
 
 		write_sampled_output_even(prev, outp, os.path.join(output_folder,"train_epoch_%03d.png"%(epoch+1)))
-		write_sampled_output_even_large(common_test, common_outp, os.path.join(output_folder,"test_epoch_%03d.png"%(epoch+1)))
+		write_sampled_output_even_large(common_test, common_outp, os.path.join(output_folder,"test_epoch_%03d.png"%(epoch+1)), 32)
 
 		if (epoch+1)%5 == 0:
 			generator.save(os.path.join(output_folder,"generator_train_epoch_%03d.h5"%(epoch+1)))
