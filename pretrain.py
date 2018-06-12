@@ -121,7 +121,7 @@ if __name__ == "__main__":
 		gen_lr = args.gen_lr,
 		output_folder = args.output,
 		data_file = args.datafile,
-		batch_size = batch_size,
+		batch_size = args.batch_size,
 		batch_norm = args.batchnorm,
 		skip_conn = args.skipconn,
 		reg = args.gen_regularizer)
