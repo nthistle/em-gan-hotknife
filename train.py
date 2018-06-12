@@ -240,6 +240,7 @@ def generate_argparser():
 	parser.add_argument('-po','--pen_opt', type=str, help="optimizer to use for penalty (on generator) [sgd|adam]", default="adam")
 	parser.add_argument('-in','--instance_noise', type=float, help="std dev of random noise to add. 0 for no noise", default=0.0)
 	parser.add_argument('-ne','--epochs', type=int, help="number of epochs to train for", default=50)
+	parser.add_argument('-bs','--batch_size', type=int, help="batch size", default=32)
 	parser.add_argument('-np','--num_passive', type=int, help="number of epochs to let discriminator train alone for", default=2)
 	parser.add_argument('-dlr','--disc_lr', type=float, help="discriminator learning rate", required=True)
 	parser.add_argument('-glr','--gen_lr', type=float, help="generator learning rate", required=True)
@@ -253,7 +254,7 @@ def generate_argparser():
 if __name__ == "__main__":
 	args = generate_argparser().parse_args()
 	main(args.generator,
-		batch_size = 32, ## Temporary, half as large
+		batch_size = args.batch_size,
 		epochs = args.epochs,
 		disc_lr = args.disc_lr,
 		gen_lr = args.gen_lr,
