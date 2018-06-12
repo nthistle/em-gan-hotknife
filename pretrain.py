@@ -38,7 +38,7 @@ def get_masked_loss(batch_size):
 
 
 def main(epochs=25, batch_size=64, num_batches=32, batch_norm=False, skip_conn=False,
-	gen_lr=1e-6, data_file="hotknifedata.hdf5", output_folder="run_output"):
+	gen_lr=1e-6, reg=0.0, data_file="hotknifedata.hdf5", output_folder="run_output"):
 
 	print("Running em-hotknife GAN pre-training for %d epochs with parameters:" % epochs)
 	print("Generator LR: %f" % gen_lr)
@@ -46,7 +46,7 @@ def main(epochs=25, batch_size=64, num_batches=32, batch_norm=False, skip_conn=F
 	if not os.path.isdir(output_folder):
 		os.mkdir(output_folder)
 
-	generator = get_generator(skip_connections=skip_conn, batch_norm=batch_norm)
+	generator = get_generator(skip_connections=skip_conn, batch_norm=batch_norm, regularization=reg)
 	generator.compile(loss='mean_squared_error', optimizer=Adam(gen_lr))
 
 	# for pretraining generator
@@ -109,6 +109,7 @@ def generate_argparser():
 	parser.add_argument('-ne','--epochs', type=int, help="number of epochs to train for", default=50)
 	parser.add_argument('-glr','--gen_lr', type=float, help="generator learning rate", required=True)
 	parser.add_argument('-o','--output', type=str, help="folder/directory to output data to", required=True)
+	parser.add_argument('--gen_regularizer', type=float, help="weight for l1l2 regularizer on generator", default=0)
 	parser.add_argument('--batchnorm', type=str2bool, nargs="?", const=True, default=False, help="whether to use batch norm in generator")
 	parser.add_argument('--skipconn', type=str2bool, nargs="?", const=True, default=False, help="whether to use skip connections in generator")
 	return parser
@@ -120,4 +121,5 @@ if __name__ == "__main__":
 		output_folder = args.output,
 		data_file = args.datafile,
 		batch_norm = args.batchnorm,
-		skip_conn = args.skipconn)
+		skip_conn = args.skipconn,
+		reg = args.gen_regularizer)
