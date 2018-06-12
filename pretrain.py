@@ -107,6 +107,7 @@ def generate_argparser():
 	parser = argparse.ArgumentParser(description="Train em-hotknife GAN")
 	parser.add_argument('-df','--datafile', type=str, help="data file (hdf5) to sample from", required=True)
 	parser.add_argument('-ne','--epochs', type=int, help="number of epochs to train for", default=50)
+	parser.add_argument('-bs','--batch_size', type=int, help="batch size", default=64)
 	parser.add_argument('-glr','--gen_lr', type=float, help="generator learning rate", required=True)
 	parser.add_argument('-o','--output', type=str, help="folder/directory to output data to", required=True)
 	parser.add_argument('--gen_regularizer', type=float, help="weight for l1l2 regularizer on generator", default=0)
@@ -120,6 +121,7 @@ if __name__ == "__main__":
 		gen_lr = args.gen_lr,
 		output_folder = args.output,
 		data_file = args.datafile,
+		batch_size = batch_size,
 		batch_norm = args.batchnorm,
 		skip_conn = args.skipconn,
 		reg = args.gen_regularizer)
