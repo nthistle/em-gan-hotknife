@@ -96,18 +96,24 @@ def get_generator(relu_leak=0.2, skip_connections=False, batch_norm=False, regul
 	return Model(input_layer, output_layer)
 
 
-def get_discriminator(relu_leak=0.2, batch_norm=False):
+def get_discriminator(relu_leak=0.2, batch_norm=False, regularization = 0.0):
 	"""Returns small discriminator, mapping 32x32x32 into a single output prediction.
 	Architecture is fairly standard, two layers of convolutions between max pooling layers.
 
 	Keyword arguments:
 	relu_leak -- Alpha parameter to the LeakyReLU layers
 	"""
+
+	if regularization > 0.0:
+		reg = lambda : L1L2(regularization, regularization)
+	else:
+		reg = lambda : None
+
 	input_layer = Input(shape = (32,32,32,1))
 
-	conv1_1 = Conv3D(16, (3,3,3), name="conv1_1")(input_layer)
+	conv1_1 = Conv3D(16, (3,3,3), name="conv1_1", kernel_regularizer=reg())(input_layer)
 	relu1_1 = LeakyReLU(relu_leak, name="relu1_1")(conv1_1)
-	conv1_2 = Conv3D(32, (3,3,3), name="conv1_2")(relu1_1)
+	conv1_2 = Conv3D(32, (3,3,3), name="conv1_2", kernel_regularizer=reg())(relu1_1)
 	relu1_2 = LeakyReLU(relu_leak, name="relu1_2")(conv1_2)
 
 	if batch_norm:
@@ -116,9 +122,9 @@ def get_discriminator(relu_leak=0.2, batch_norm=False):
 	else:
 		pool1 = MaxPooling3D((2,2,2), name="pool1")(relu1_2)
 
-	conv2_1 = Conv3D(32, (3,3,3), name="conv2_1")(pool1)
+	conv2_1 = Conv3D(32, (3,3,3), name="conv2_1", kernel_regularizer=reg())(pool1)
 	relu2_1 = LeakyReLU(relu_leak, name="relu2_1")(conv2_1)
-	conv2_2 = Conv3D(64, (3,3,3), name="conv2_2")(relu2_1)
+	conv2_2 = Conv3D(64, (3,3,3), name="conv2_2", kernel_regularizer=reg())(relu2_1)
 	relu2_2 = LeakyReLU(relu_leak, name="relu2_2")(conv2_2)
 
 
@@ -128,9 +134,9 @@ def get_discriminator(relu_leak=0.2, batch_norm=False):
 	else:
 		pool2 = MaxPooling3D((2,2,2), name="pool2")(relu2_2)
 
-	conv3_1 = Conv3D(64, (3,3,3), name="conv3_1")(pool2)
+	conv3_1 = Conv3D(64, (3,3,3), name="conv3_1", kernel_regularizer=reg())(pool2)
 	relu3_1 = LeakyReLU(relu_leak, name="relu3_1")(conv3_1)
-	conv3_2 = Conv3D(96, (1,1,1),  name="conv3_2")(relu3_1)
+	conv3_2 = Conv3D(96, (1,1,1),  name="conv3_2", kernel_regularizer=reg())(relu3_1)
 	relu3_2 = LeakyReLU(relu_leak, name="relu3_2")(conv3_2)
 
 	flat1 = Flatten(name="flat1")(relu3_2)
