@@ -43,7 +43,7 @@ def apply_noise(samp, std_dev=0.03):
 def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	disc_lr=1e-7, gen_lr=1e-6, penalty_lr=1e-5, num_passive=2, noise=0.0,
 	disc_optim="adam", gen_optim="adam", pen_optim="adam", batch_norm=False,
-	lower_noise=False, disc_regularization=0,
+	lower_noise=False, disc_regularization=0, sc_enabled=False,
 	data_file="hotknifedata.hdf5", output_folder="run_output"):
 
 	disc_optim = disc_optim.lower()
@@ -213,7 +213,7 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 		history["g_loss"].append(g_loss)
 		history["g_penalty"].append(g_loss_penalty)
 
-		if critical_epochs > CRITICAL_EPOCH_THRESH:
+		if critical_epochs > CRITICAL_EPOCH_THRESH and sc_enabled:
 			print("[INFO] SHORT CIRCUITING TRAINING! g_loss > 2*d_loss for 3+ epochs!")
 			break
 
@@ -246,6 +246,7 @@ def generate_argparser():
 	parser.add_argument('-glr','--gen_lr', type=float, help="generator learning rate", required=True)
 	parser.add_argument('-plr','--penalty_lr', type=float, help="generator deviation penalty learning rate", required=True)
 	parser.add_argument('-o','--output', type=str, help="folder/directory to output data to", required=True)
+	parser.add_argument('--short_circuit', type=str2bool, nargs="?", const=True, help="whether to enable short-circuiting training", default=False)
 	parser.add_argument('--disc_regularizer', type=float, help="weight for l1l2 regularizer on discriminator", default=0)
 	parser.add_argument('--batch_norm', type=str2bool, nargs="?", const=True, help="whether to use batch norm in discriminator", default=False)
 	parser.add_argument('--lower_noise', type=str2bool, nargs="?", const=True, help="whether to slowly lower the instance noise during training", default=False)
@@ -268,5 +269,6 @@ if __name__ == "__main__":
 		data_file = args.datafile,
 		batch_norm = args.batch_norm,
 		lower_noise = args.lower_noise,
-		disc_regularization = args.disc_regularizer
+		disc_regularization = args.disc_regularizer,
+		sc_enabled = args.short_circuit
 		)
