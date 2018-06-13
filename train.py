@@ -111,9 +111,11 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	common_test = common_test_gen.__next__()  ## Will sample this same one every epoch to better see what it's learning
 
 
-	## Once we've had 3+ "critical" epochs (where discriminator loss is much lower than generator loss), terminate training early
+	## Once we've had 3+ "critical" epochs (where discriminator loss is much lower than generator loss), terminate training early, if short circuiting enabled
 	CRITICAL_EPOCH_THRESH = 3
 	critical_epochs = 0
+
+	history = {"epoch":[], "d_loss":[], "d_acc":[], "g_loss":[], "g_penalty":[]}
 
 	## Just do an "Epoch 0" test
 	latent_samp = fake_gen.__next__()
@@ -122,12 +124,15 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 	d_loss = 0.5 * np.add(discriminator.test_on_batch(real_data, np.ones((batch_size, 1))), discriminator.test_on_batch(gen_output, np.zeros((batch_size, 1))))
 	g_loss = combined.test_on_batch(latent_samp, np.ones((batch_size, 1)))
 	g_loss_penalty = penalty.test_on_batch(latent_samp, get_center_of_valid_block(latent_samp))
-	print("Epoch 0 [D loss: %f acc: %f] [G loss: %f penalty: %f]" % (d_loss[0], d_loss[1], g_loss, g_loss_penalty))
+	print("Epoch #0 [D loss: %f acc: %f] [G loss: %f penalty: %f]" % (d_loss[0], d_loss[1], g_loss, g_loss_penalty))
 	print("="*50)
-	## End our Epoch 0 stuff
-	## For now, don't bother recording 'epoch 0' in history
 
-	history = {"epoch":[], "d_loss":[], "d_acc":[], "g_loss":[], "g_penalty":[]}
+	history["epoch"].append(0)
+	history["d_loss"].append(d_loss[0])
+	history["d_acc"].append(d_loss[1])
+	history["g_loss"].append(g_loss)
+	history["g_penalty"].append(g_loss_penalty)
+	## End our Epoch 0 stuff
 
 	current_noise = noise
 
@@ -207,7 +212,7 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 			discriminator.save(os.path.join(output_folder,"discriminator_train_epoch_%03d.h5"%(epoch+1)))
 
 		# Update History
-		history["epoch"].append(epoch)
+		history["epoch"].append(epoch+1)
 		history["d_loss"].append(d_loss[0])
 		history["d_acc"].append(d_loss[1])
 		history["g_loss"].append(g_loss)
