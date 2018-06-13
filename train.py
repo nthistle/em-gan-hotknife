@@ -190,16 +190,16 @@ def main(generator_filename, epochs=25, batch_size=64, num_batches=32,
 			critical_epochs = 0
 
 		# now save some sample input
-		prev = test_gen.__next__()
+		#prev = test_gen.__next__()
 
-		outp = generator.predict(prev)
+		#outp = generator.predict(prev)
 		common_outp = generator.predict(common_test)
 
-		if noise > 0.0:
-			outp = apply_noise(outp, noise)
-			common_outp = apply_noise(common_outp, noise)
+		#if noise > 0.0:
+		#	outp = apply_noise(outp, noise)
+		#	common_outp = apply_noise(common_outp, noise)
 
-		write_sampled_output_even(prev, outp, os.path.join(output_folder,"train_epoch_%03d.png"%(epoch+1)))
+		#write_sampled_output_even(prev, outp, os.path.join(output_folder,"train_epoch_%03d.png"%(epoch+1)))
 		write_sampled_output_even_large(common_test, common_outp, os.path.join(output_folder,"test_epoch_%03d.png"%(epoch+1)), 32)
 
 		if (epoch+1)%5 == 0:
