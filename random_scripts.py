@@ -36,3 +36,12 @@ def back_calc_nice( output_shape, decrease_per=2, num_times=2, factor=2, stages=
 	shapes.pop()
 
 	return shapes
+
+## Pretty formatting!
+## Get the architecture from back_calc_nice, preferably (similar structure).
+def format_unet_nice( unet_arch ):
+	mat = [[None]]
+	extend_up = lambda : mat.insert([None]*len(mat[0]))
+	extend_right = lambda : [m.append(None) for m in mat]
+	extend_down = lambda : mat.append([None]*len(mat[0]))
+	## WIP
