@@ -7,7 +7,7 @@ from keras.regularizers import L1L2
 import numpy as np
 
 ## 295 with factor=3 -> output size of 83
-def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, regularization=0.0):
+def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
 
 	if regularization > 0.0:
 		reg = lambda : L1L2(regularization, regularization)
@@ -22,10 +22,15 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, regular
 	relu1_1 = LeakyReLU(relu_leak, name="relu1_1")(conv1_1)
 	conv1_2 = Conv3D(filter_count, (3,3,3), name="conv1_2", padding="valid", kernel_regularizer=reg())(relu1_1)
 	relu1_2 = LeakyReLU(relu_leak, name="relu1_2")(conv1_2)
-	## TODO ADD BN
-	stage1_out = relu1_2
+
+	if batch_norm:
+		bn1 = BatchNormalization(momentum=bn_momentum, name="bn1")(relu1_2)
+		stage1_out = bn1
+	else:
+		stage1_out = relu1_2
 
 	pool1 = MaxPooling3D((3,3,3), name="pool1")(stage1_out)
+
 
 
 	filter_count *= filter_scale
@@ -35,11 +40,15 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, regular
 	relu2_1 = LeakyReLU(relu_leak, name="relu2_1")(conv2_1)
 	conv2_2 = Conv3D(filter_count, (3,3,3), name="conv2_2", padding="valid", kernel_regularizer=reg())(relu2_1)
 	relu2_2 = LeakyReLU(relu_leak, name="relu2_2")(conv2_2)
-	## TODO BATCH NORM
-	stage2_out = relu2_2
 
+	if batch_norm:
+		bn2 = BatchNormalization(momentum=bn_momentum, name="bn2")(relu2_2)
+		stage2_out = bn2
+	else:
+		stage2_out = relu2_2
 
 	pool2 = MaxPooling3D((3,3,3), name="pool2")(stage2_out)
+
 
 
 	filter_count *= filter_scale
@@ -49,8 +58,12 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, regular
 	relu3_1 = LeakyReLU(relu_leak, name="relu3_1")(conv3_1)
 	conv3_2 = Conv3D(filter_count, (3,3,3), name="conv3_2", padding="valid", kernel_regularizer=reg())(relu3_1)
 	relu3_2 = LeakyReLU(relu_leak, name="relu3_2")(conv3_2)
-	## TODO BATCH NORM
-	stage3_out = relu3_2
+
+	if batch_norm:
+		bn3 = BatchNormalization(momentum=bn_momentum, name="bn3")(relu3_2)
+		stage3_out = bn3
+	else:
+		stage3_out = relu3_2
 
 	pool3 = MaxPooling3D((3,3,3), name="pool3")(stage3_out)
 
@@ -63,25 +76,33 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, regular
 	relu4_1 = LeakyReLU(relu_leak, name="relu4_1")(conv4_1)
 	conv4_2 = Conv3D(filter_count, (3,3,3), name="conv4_2", padding="valid", kernel_regularizer=reg())(relu4_1)
 	relu4_2 = LeakyReLU(relu_leak, name="relu4_2")(conv4_2)
-	## TODO BATCH NORM
-	stage4_out = relu4_2
+
+	if batch_norm:
+		bn4 = BatchNormalization(momentum=bn_momentum, name="bn4")(relu4_2)
+		stage4_out = bn4
+	else:
+		stage4_out = relu4_2
 
 	upsamp1 = UpSampling3D((3,3,3), name="upsamp1")(stage4_out)
 	#upconv1 = Conv3D(64, (2,2,2), padding=padding, name="upconv1")(upsamp1)
 	#uprelu1 = LeakyReLU(relu_leak, name="uprelu1")(upconv1)
 
 
+
 	stage3_out_cropped = Cropping3D(cropping=6)(stage3_out)
 	stage5_in = Concatenate()([upsamp1, stage3_out_cropped])
 	filter_count //= filter_scale
-	#stage5_in = upsamp1
 
 	conv5_1 = Conv3D(filter_count, (3,3,3), name="conv5_1", padding="valid", kernel_regularizer=reg())(stage5_in)
 	relu5_1 = LeakyReLU(relu_leak, name="relu5_1")(conv5_1)
 	conv5_2 = Conv3D(filter_count, (3,3,3), name="conv5_2", padding="valid", kernel_regularizer=reg())(relu5_1)
 	relu5_2 = LeakyReLU(relu_leak, name="relu5_2")(conv5_2)
-	## TODO BATCH NORM
-	stage5_out = relu5_2
+
+	if batch_norm:
+		bn5 = BatchNormalization(momentum=bn_momentum, name="bn5")(relu5_2)
+		stage5_out = bn5
+	else:
+		stage5_out = relu5_2
 
 	upsamp2 = UpSampling3D((3,3,3), name="upsamp2")(stage5_out)
 	#upconv2 = Conv3D(128, (2,2,2), padding=padding, name="upconv2")(upsamp2)
@@ -92,14 +113,17 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, regular
 	stage2_out_cropped = Cropping3D(cropping=30)(stage2_out)
 	stage6_in = Concatenate()([upsamp2, stage2_out_cropped])
 	filter_count //= filter_scale
-	#stage6_in = upsamp2
 
 	conv6_1 = Conv3D(filter_count, (3,3,3), name="conv6_1", padding="valid", kernel_regularizer=reg())(stage6_in)
 	relu6_1 = LeakyReLU(relu_leak, name="relu6_1")(conv6_1)
 	conv6_2 = Conv3D(filter_count, (3,3,3), name="conv6_2", padding="valid", kernel_regularizer=reg())(relu6_1)
 	relu6_2 = LeakyReLU(relu_leak, name="relu6_2")(conv6_2)
-	## TODO BATCH NORM
-	stage6_out = relu6_2
+
+	if batch_norm:
+		bn6 = BatchNormalization(momentum=bn_momentum, name="bn6")(relu6_2)
+		stage6_out = bn6
+	else:
+		stage6_out = relu6_2
 
 	upsamp3 = UpSampling3D((3,3,3), name="upsamp3")(stage6_out)
 	#upconv3 = Conv3D(64, (2,2,2), padding=padding, name="upconv3")(upsamp3)
@@ -110,7 +134,6 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, regular
 	stage1_out_cropped = Cropping3D(cropping=102)(stage1_out)
 	stage7_in = Concatenate()([upsamp3, stage1_out_cropped])
 	filter_count //= filter_scale
-	#stage7_in = upsamp3
 
 	conv7_1 = Conv3D(filter_count, (3,3,3), name="conv7_1", padding="valid", kernel_regularizer=reg())(stage7_in)
 	relu7_1 = LeakyReLU(relu_leak, name="relu7_1")(conv7_1)
@@ -126,7 +149,7 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, regular
 
 
 ## 156 with factor=2 -> output size of 68
-def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, regularization=0.0):
+def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
 
 	if regularization > 0.0:
 		reg = lambda : L1L2(regularization, regularization)
@@ -141,10 +164,15 @@ def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, regular
 	relu1_1 = LeakyReLU(relu_leak, name="relu1_1")(conv1_1)
 	conv1_2 = Conv3D(filter_count, (3,3,3), name="conv1_2", padding="valid", kernel_regularizer=reg())(relu1_1)
 	relu1_2 = LeakyReLU(relu_leak, name="relu1_2")(conv1_2)
-	## TODO ADD BN
-	stage1_out = relu1_2
+
+	if batch_norm:
+		bn1 = BatchNormalization(momentum=bn_momentum, name="bn1")(relu1_2)
+		stage1_out = bn1
+	else:
+		stage1_out = relu1_2
 
 	pool1 = MaxPooling3D((2,2,2), name="pool1")(stage1_out)
+
 
 
 	filter_count *= filter_scale
@@ -154,11 +182,15 @@ def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, regular
 	relu2_1 = LeakyReLU(relu_leak, name="relu2_1")(conv2_1)
 	conv2_2 = Conv3D(filter_count, (3,3,3), name="conv2_2", padding="valid", kernel_regularizer=reg())(relu2_1)
 	relu2_2 = LeakyReLU(relu_leak, name="relu2_2")(conv2_2)
-	## TODO BATCH NORM
-	stage2_out = relu2_2
 
+	if batch_norm:
+		bn2 = BatchNormalization(momentum=bn_momentum, name="bn2")(relu2_2)
+		stage2_out = bn2
+	else:
+		stage2_out = relu2_2
 
 	pool2 = MaxPooling3D((2,2,2), name="pool2")(stage2_out)
+
 
 
 	filter_count *= filter_scale
@@ -168,8 +200,12 @@ def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, regular
 	relu3_1 = LeakyReLU(relu_leak, name="relu3_1")(conv3_1)
 	conv3_2 = Conv3D(filter_count, (3,3,3), name="conv3_2", padding="valid", kernel_regularizer=reg())(relu3_1)
 	relu3_2 = LeakyReLU(relu_leak, name="relu3_2")(conv3_2)
-	## TODO BATCH NORM
-	stage3_out = relu3_2
+
+	if batch_norm:
+		bn3 = BatchNormalization(momentum=bn_momentum, name="bn3")(relu3_2)
+		stage3_out = bn3
+	else:
+		stage3_out = relu3_2
 
 	pool3 = MaxPooling3D((2,2,2), name="pool3")(stage3_out)
 
@@ -182,25 +218,33 @@ def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, regular
 	relu4_1 = LeakyReLU(relu_leak, name="relu4_1")(conv4_1)
 	conv4_2 = Conv3D(filter_count, (3,3,3), name="conv4_2", padding="valid", kernel_regularizer=reg())(relu4_1)
 	relu4_2 = LeakyReLU(relu_leak, name="relu4_2")(conv4_2)
-	## TODO BATCH NORM
-	stage4_out = relu4_2
+
+	if batch_norm:
+		bn4 = BatchNormalization(momentum=bn_momentum, name="bn4")(relu4_2)
+		stage4_out = bn4
+	else:
+		stage4_out = relu4_2
 
 	upsamp1 = UpSampling3D((2,2,2), name="upsamp1")(stage4_out)
 	#upconv1 = Conv3D(64, (2,2,2), padding=padding, name="upconv1")(upsamp1)
 	#uprelu1 = LeakyReLU(relu_leak, name="uprelu1")(upconv1)
 
 
+
 	stage3_out_cropped = Cropping3D(cropping=4)(stage3_out)
 	stage5_in = Concatenate()([upsamp1, stage3_out_cropped])
 	filter_count //= filter_scale
-	#stage5_in = upsamp1
 
 	conv5_1 = Conv3D(filter_count, (3,3,3), name="conv5_1", padding="valid", kernel_regularizer=reg())(stage5_in)
 	relu5_1 = LeakyReLU(relu_leak, name="relu5_1")(conv5_1)
 	conv5_2 = Conv3D(filter_count, (3,3,3), name="conv5_2", padding="valid", kernel_regularizer=reg())(relu5_1)
 	relu5_2 = LeakyReLU(relu_leak, name="relu5_2")(conv5_2)
-	## TODO BATCH NORM
-	stage5_out = relu5_2
+
+	if batch_norm:
+		bn5 = BatchNormalization(momentum=bn_momentum, name="bn5")(relu5_2)
+		stage5_out = bn5
+	else:
+		stage5_out = relu5_2
 
 	upsamp2 = UpSampling3D((2,2,2), name="upsamp2")(stage5_out)
 	#upconv2 = Conv3D(128, (2,2,2), padding=padding, name="upconv2")(upsamp2)
@@ -211,14 +255,17 @@ def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, regular
 	stage2_out_cropped = Cropping3D(cropping=16)(stage2_out)
 	stage6_in = Concatenate()([upsamp2, stage2_out_cropped])
 	filter_count //= filter_scale
-	#stage6_in = upsamp2
 
 	conv6_1 = Conv3D(filter_count, (3,3,3), name="conv6_1", padding="valid", kernel_regularizer=reg())(stage6_in)
 	relu6_1 = LeakyReLU(relu_leak, name="relu6_1")(conv6_1)
 	conv6_2 = Conv3D(filter_count, (3,3,3), name="conv6_2", padding="valid", kernel_regularizer=reg())(relu6_1)
 	relu6_2 = LeakyReLU(relu_leak, name="relu6_2")(conv6_2)
-	## TODO BATCH NORM
-	stage6_out = relu6_2
+
+	if batch_norm:
+		bn6 = BatchNormalization(momentum=bn_momentum, name="bn6")(relu6_2)
+		stage6_out = bn6
+	else:
+		stage6_out = relu6_2
 
 	upsamp3 = UpSampling3D((2,2,2), name="upsamp3")(stage6_out)
 	#upconv3 = Conv3D(64, (2,2,2), padding=padding, name="upconv3")(upsamp3)
@@ -229,7 +276,6 @@ def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, regular
 	stage1_out_cropped = Cropping3D(cropping=40)(stage1_out)
 	stage7_in = Concatenate()([upsamp3, stage1_out_cropped])
 	filter_count //= filter_scale
-	#stage7_in = upsamp3
 
 	conv7_1 = Conv3D(filter_count, (3,3,3), name="conv7_1", padding="valid", kernel_regularizer=reg())(stage7_in)
 	relu7_1 = LeakyReLU(relu_leak, name="relu7_1")(conv7_1)
