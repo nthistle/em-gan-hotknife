@@ -1,7 +1,7 @@
-from keras.layers import Conv2D, Conv2DTranspose, UpSampling2D, Dense, Reshape, Flatten, Activation, Input, Lambda
-from keras.models import Sequential, load_model
-from keras.layers.advanced_activations import LeakyReLU
-from keras.losses import binary_crossentropy, mean_squared_error
+#!/usr/bin/env python3
+from keras.layers import Input
+from keras.models import load_model
+from keras.losses import mean_squared_error
 from keras.optimizers import Adam, SGD
 from keras.regularizers import L1L2
 
