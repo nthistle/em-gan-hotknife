@@ -8,6 +8,13 @@ import numpy as np
 
 ## 295 with factor=3 -> output size of 83
 def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
+	init_filters=int(init_filters)
+	filter_scale=int(filter_scale)
+	relu_leak=float(relu_leak)
+	batch_norm=batch_norm in ["True","true",True]
+	bn_momentum=float(bn_momentum)
+	regularization=float(regularization)
+
 
 	if regularization > 0.0:
 		reg = lambda : L1L2(regularization, regularization)
@@ -150,6 +157,13 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, batch_n
 
 ## 156 with factor=2 -> output size of 68
 def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
+	init_filters=int(init_filters)
+	filter_scale=int(filter_scale)
+	relu_leak=float(relu_leak)
+	batch_norm=batch_norm in ["True","true",True]
+	bn_momentum=float(bn_momentum)
+	regularization=float(regularization)
+
 
 	if regularization > 0.0:
 		reg = lambda : L1L2(regularization, regularization)
