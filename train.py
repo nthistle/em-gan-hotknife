@@ -1,12 +1,6 @@
 from keras.layers import Input
-from keras.models import load_model
 from keras.losses import mean_squared_error
-from keras.optimizers import Adam, SGD
-from keras.regularizers import L1L2
 
-from keras import backend as K
-
-from models import *
 from data_utils import *
 
 import numpy as np
@@ -15,7 +9,6 @@ import math
 
 import os
 import pandas
-import sys
 import argparse
 
 
@@ -82,7 +75,8 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 
 	test_sample = gap_generator.__next__()
 
-	history = {"epoch":[], "d_loss":[], "d_acc":[], "g_loss":[], "g_penalty":[]}
+	history_cols = ["epoch","d_loss","d_acc","g_loss","g_penalty"]
+	history = {col: [] for col in history_cols}
 
 	if not os.path.exists(os.path.join(base_save_dir, "model-saves")):
 		os.makedirs(os.path.join(base_save_dir, "model-saves"))
@@ -123,7 +117,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 
 		d_loss, g_loss, g_loss_penalty = None, None, None
 
-		for n in range(num_minibatch):
+		for _ in range(num_minibatch):
 			
 			## Train the Discriminator
 			gap_data = gap_generator.__next__()
@@ -161,5 +155,8 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 		if (epoch)%15 == 0:
 			generator.save(os.path.join(base_save_dir,"model-saves","generator_train_epoch_%03d.h5"%(epoch+1)))
 			discriminator.save(os.path.join(base_save_dir,"model-saves","discriminator_train_epoch_%03d.h5"%(epoch+1)))
+
+	with open(os.path.join(base_save_dir,"history.csv"),"w") as f:
+		pandas.DataFrame(history).reindex(columns=history_cols).to_csv(f, index=False)
 
 	return generator
