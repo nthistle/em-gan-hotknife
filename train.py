@@ -1,8 +1,6 @@
 from keras.layers import Input
 from keras.losses import mean_squared_error
 
-from data_utils import *
-
 import numpy as np
 import tensorflow as tf
 import math
@@ -15,7 +13,7 @@ import argparse
 def get_masked_loss(batch_size, output_shape, mask_size, slice_index):
 
 	mask = np.zeros((batch_size,) + output_shape + (1,), dtype=np.float32)
-	slices = [slice()]*3
+	slices = [slice(None)]*3
 
 	lower_bound = (output_shape[slice_index] - mask_size)//2
 	upper_bound = (output_shape[slice_index] + mask_size)//2
@@ -45,18 +43,18 @@ def get_center_of_block(block, target_shape):
 	# target is 24
 	start_pos = [(a-b)//2 for a, b in zip(block.shape[1:-1], target_shape)]
 	slices = [slice(start, start + s) for start, s in zip(start_pos, target_shape)]
-	return block[:,*slices]
+	return block[:,slices[0],slices[1],slices[2]]
 
 
 def train(generator, discriminator, generator_optimizer, discriminator_optimizer, penalty_optimizer,
 	epochs, minibatch_size, num_minibatch, instance_noise, instance_noise_profile, input_shape, output_shape,
 	generator_mask_size, valid_generator, gap_generator, gap_index, base_save_dir):
-    """ Trains the given generator using all the given parameters and generators.
+	""" Trains the given generator using all the given parameters and generators.
 
-    valid_generator -> should be a generator that returns entirely valid data of size (minibatch_size, *output_shape, 1)
-    gap_generator   -> should be a generator that returns data with a gap in the middle of size (minibatch_size, *input_shape, 1)
+	valid_generator -> should be a generator that returns entirely valid data of size (minibatch_size, *output_shape, 1)
+	gap_generator   -> should be a generator that returns data with a gap in the middle of size (minibatch_size, *input_shape, 1)
 
-    """
+	"""
 
 	discriminator.compile(loss='binary_crossentropy', optimizer=discriminator_optimizer, metrics=['accuracy'])
 
@@ -78,11 +76,11 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 	history_cols = ["epoch","d_loss","d_acc","g_loss","g_penalty"]
 	history = {col: [] for col in history_cols}
 
-	if not os.path.exists(os.path.join(base_save_dir, "model-saves")):
-		os.makedirs(os.path.join(base_save_dir, "model-saves"))
+	if not os.path.exists(os.path.join(base_save_dir, "train", "model-saves")):
+		os.makedirs(os.path.join(base_save_dir, "train", "model-saves"))
 
-	if not os.path.exists(os.path.join(base_save_dir, "samples")):
-		os.makedirs(os.path.join(base_save_dir, "samples"))
+	if not os.path.exists(os.path.join(base_save_dir, "train", "samples")):
+		os.makedirs(os.path.join(base_save_dir, "train", "samples"))	
 
 
 	def update_and_print_history(epoch, d_loss, d_acc, g_loss, g_penalty):
@@ -150,13 +148,13 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 
 		update_and_print_history(epoch=epoch, d_loss=d_loss[0], d_acc=d_loss[1], g_loss=g_loss, g_penalty=g_loss_penalty)
 
-		sample_and_write_output(output_directory=os.path.join(base_save_dir, "samples"))
+		sample_and_write_output(output_directory=os.path.join(base_save_dir, "train", "samples"))
 
 		if (epoch)%15 == 0:
-			generator.save(os.path.join(base_save_dir,"model-saves","generator_train_epoch_%03d.h5"%(epoch+1)))
-			discriminator.save(os.path.join(base_save_dir,"model-saves","discriminator_train_epoch_%03d.h5"%(epoch+1)))
+			generator.save(os.path.join(base_save_dir, "train", "model-saves", "generator_train_epoch_%03d.h5"%(epoch+1)))
+			discriminator.save(os.path.join(base_save_dir, "train", "model-saves", "discriminator_train_epoch_%03d.h5"%(epoch+1)))
 
-	with open(os.path.join(base_save_dir,"history.csv"),"w") as f:
+	with open(os.path.join(base_save_dir, "train", "history.csv"),"w") as f:
 		pandas.DataFrame(history).reindex(columns=history_cols).to_csv(f, index=False)
 
 	return generator
