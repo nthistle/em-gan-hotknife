@@ -41,7 +41,7 @@ def pretrain(generator, generator_optimizer, epochs, minibatch_size, num_minibat
 	persistent_sample = np.zeros((18, *input_shape, 1))
 	for i in range(math.ceil(18/minibatch_size)):
 		samp = valid_generator.__next__()
-		persistent_sample[i:min(i+minibatch_size,18)] = samp[:min(minibatch_size,18-i*minibatch_size)]
+		persistent_sample[i*minibatch_size:min(i*minibatch_size+minibatch_size,18)] = samp[:min(minibatch_size,18-i*minibatch_size)]
 
 	def sample_and_write_output(output_directory, epoch, width=32):
 		block_height = output_shape[(gap_index+1)%3]
