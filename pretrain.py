@@ -44,15 +44,15 @@ def pretrain(generator, generator_optimizer, epochs, minibatch_size, num_minibat
 		persistent_sample[i*minibatch_size:min(i*minibatch_size+minibatch_size,18)] = samp[:min(minibatch_size,18-i*minibatch_size)]
 
 	def sample_and_write_output(output_directory, epoch, width=32):
-		block_height = output_shape[(gap_index+1)%3]
-		block_length = output_shape[(gap_index+2)%3]
+		block_height = output_shape[1]
+		block_length = output_shape[2]
 		slices = [slice()]*3
 		im = np.zeros((18*2*block_height, width*block_length))
 		#sample_prediction = np.zeros((18, *output_shape, 1))
 		for i in range(18): ## TODO: do this in minibatches
 			sample_prediction = generator.predict(persistent_sample[i:i+1])[0]
 			for j in range(width):
-				slices[gap_index] = slice(round(j*output_shape[gap_index]/width),round(j*output_shape[gap_index]/width)+1)
+				slices[0] = slice(round(j*output_shape[0]/width),round(j*output_shape[0]/width)+1)
 				im[i*2*block_height:(i*2+1)*block_height,block_length*j:block_length*(j+1)] = sample_prediction[slices[0], slices[1], slices[2], 0]
 		Image.fromarray(np.clip((255*im).round(),0,255).astype(np.uint8)).save(os.path.join(output_directory, "sample_epoch_%03d.png" % epoch))
 
@@ -74,7 +74,7 @@ def pretrain(generator, generator_optimizer, epochs, minibatch_size, num_minibat
 
 		update_and_print_history(epoch=epoch, loss=g_loss)
 
-		sample_and_write_output(output_directory=os.path.join(base_save_dir, "samples"))
+		sample_and_write_output(output_directory=os.path.join(base_save_dir, "samples"), epoch=epoch)
 
 
 	with open(os.path.join(base_save_dir,"history.csv"),"w") as f:
