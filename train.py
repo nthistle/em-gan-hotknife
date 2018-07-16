@@ -89,7 +89,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 		history["d_acc"].append(d_acc)
 		history["g_loss"].append(g_loss)
 		history["g_penalty"].append(g_penalty)
-		print(f"Epoch #{epoch+1} [D]: loss: {d_loss[0]} acc: {d_loss[1]}, [G]: loss: {g_loss} penalty: {g_loss_penalty}")
+		print(f"Epoch #{epoch} [D]: loss: {d_loss[0]} acc: {d_loss[1]}, [G]: loss: {g_loss} penalty: {g_loss_penalty}")
 
 
 	persistent_sample = np.zeros((18, *input_shape, 1))
