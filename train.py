@@ -1,5 +1,6 @@
 from keras.layers import Input
 from keras.losses import mean_squared_error
+from PIL import Image
 
 import numpy as np
 import tensorflow as tf
@@ -80,7 +81,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 		os.makedirs(os.path.join(base_save_dir, "train", "model-saves"))
 
 	if not os.path.exists(os.path.join(base_save_dir, "train", "samples")):
-		os.makedirs(os.path.join(base_save_dir, "train", "samples"))	
+		os.makedirs(os.path.join(base_save_dir, "train", "samples"))
 
 
 	def update_and_print_history(epoch, d_loss, d_acc, g_loss, g_penalty):
@@ -95,19 +96,21 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 	persistent_sample = np.zeros((18, *input_shape, 1))
 	for i in range(math.ceil(18/minibatch_size)):
 		samp = gap_generator.__next__()
-		persistent_sample[i:min(i+minibatch_size,18)] = samp[:min(minibatch_size,18-i*minibatch_size)]
+		persistent_sample[i*minibatch_size:min(i*minibatch_size+minibatch_size,18)] = samp[:min(minibatch_size,18-i*minibatch_size)]
+	persistent_sample_center = get_center_of_block(persistent_sample, output_shape)
 
 	def sample_and_write_output(output_directory, epoch, width=32):
 		block_height = output_shape[(gap_index+1)%3]
 		block_length = output_shape[(gap_index+2)%3]
-		slices = [slice()]*3
+		slices = [slice(None)]*3
 		im = np.zeros((18*2*block_height, width*block_length))
 		#sample_prediction = np.zeros((18, *output_shape, 1))
 		for i in range(18): ## TODO: do this in minibatches
 			sample_prediction = generator.predict(persistent_sample[i:i+1])[0]
 			for j in range(width):
 				slices[gap_index] = slice(round(j*output_shape[gap_index]/width),round(j*output_shape[gap_index]/width)+1)
-				im[i*2*block_height:(i*2+1)*block_height,block_length*j:block_length*(j+1)] = sample_prediction[slices[0], slices[1], slices[2], 0]
+				im[i*2*block_height:(i*2+1)*block_height,block_length*j:block_length*(j+1)] = persistent_sample_center[i, slices[0], slices[1], slices[2], 0]
+				im[(i*2+1)*block_height:(i*2+2)*block_height,block_length*j:block_length*(j+1)] = sample_prediction[slices[0], slices[1], slices[2], 0]
 		Image.fromarray(np.clip((255*im).round(),0,255).astype(np.uint8)).save(os.path.join(output_directory, "sample_epoch_%03d.png" % epoch))
 
 
@@ -148,7 +151,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 
 		update_and_print_history(epoch=epoch, d_loss=d_loss[0], d_acc=d_loss[1], g_loss=g_loss, g_penalty=g_loss_penalty)
 
-		sample_and_write_output(output_directory=os.path.join(base_save_dir, "train", "samples"))
+		sample_and_write_output(output_directory=os.path.join(base_save_dir, "train", "samples"), epoch=epoch)
 
 		if (epoch)%15 == 0:
 			generator.save(os.path.join(base_save_dir, "train", "model-saves", "generator_train_epoch_%03d.h5"%(epoch+1)))
