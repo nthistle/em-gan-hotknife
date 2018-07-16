@@ -1,5 +1,6 @@
 from keras.layers import Input
 from keras.losses import mean_squared_error
+from PIL import Image
 
 import numpy as np
 import tensorflow as tf
@@ -46,7 +47,7 @@ def pretrain(generator, generator_optimizer, epochs, minibatch_size, num_minibat
 	def sample_and_write_output(output_directory, epoch, width=32):
 		block_height = output_shape[1]
 		block_length = output_shape[2]
-		slices = [slice()]*3
+		slices = [slice(None)]*3
 		im = np.zeros((18*2*block_height, width*block_length))
 		#sample_prediction = np.zeros((18, *output_shape, 1))
 		for i in range(18): ## TODO: do this in minibatches
