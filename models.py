@@ -8,10 +8,11 @@ import numpy as np
 
 
 ## 295 with factor=3 -> output size of 83
-def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
+def get_generator_arch_a(skip_conns=True, init_filters=12, filter_scale=3, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
 	init_filters=int(init_filters)
 	filter_scale=int(filter_scale)
 	relu_leak=float(relu_leak)
+	skip_conns=skip_conns in ["True","true",True]
 	batch_norm=batch_norm in ["True","true",True]
 	bn_momentum=float(bn_momentum)
 	regularization=float(regularization)
@@ -96,12 +97,15 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, batch_n
 	#uprelu1 = LeakyReLU(relu_leak, name="uprelu1")(upconv1)
 
 
-
-	stage3_out_cropped = Cropping3D(cropping=6)(stage3_out)
-	stage5_in = Concatenate()([upsamp1, stage3_out_cropped])
+	if skip_conns:
+		stage3_out_cropped = Cropping3D(cropping=6)(stage3_out)
+		stage5_in = Concatenate()([upsamp1, stage3_out_cropped])
+	else:
+		stage5_in = upsamp1
 	filter_count //= filter_scale
 
-	conv5_1 = Conv3D(filter_count, (3,3,3), name="conv5_1", padding="valid", kernel_regularizer=reg())(stage5_in)
+	conv5_1_name = "conv5_1_" + ("sc" if skip_conns else "nsc")
+	conv5_1 = Conv3D(filter_count, (3,3,3), name=conv5_1_name, padding="valid", kernel_regularizer=reg())(stage5_in)
 	relu5_1 = LeakyReLU(relu_leak, name="relu5_1")(conv5_1)
 	conv5_2 = Conv3D(filter_count, (3,3,3), name="conv5_2", padding="valid", kernel_regularizer=reg())(relu5_1)
 	relu5_2 = LeakyReLU(relu_leak, name="relu5_2")(conv5_2)
@@ -117,12 +121,15 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, batch_n
 	#uprelu2 = LeakyReLU(relu_leak, name="uprelu2")(upconv2)
 
 
-
-	stage2_out_cropped = Cropping3D(cropping=30)(stage2_out)
-	stage6_in = Concatenate()([upsamp2, stage2_out_cropped])
+	if skip_conns:
+		stage2_out_cropped = Cropping3D(cropping=30)(stage2_out)
+		stage6_in = Concatenate()([upsamp2, stage2_out_cropped])
+	else:
+		stage6_in = upsamp2
 	filter_count //= filter_scale
 
-	conv6_1 = Conv3D(filter_count, (3,3,3), name="conv6_1", padding="valid", kernel_regularizer=reg())(stage6_in)
+	conv6_1_name = "conv6_1_" + ("sc" if skip_conns else "nsc")
+	conv6_1 = Conv3D(filter_count, (3,3,3), name=conv6_1_name, padding="valid", kernel_regularizer=reg())(stage6_in)
 	relu6_1 = LeakyReLU(relu_leak, name="relu6_1")(conv6_1)
 	conv6_2 = Conv3D(filter_count, (3,3,3), name="conv6_2", padding="valid", kernel_regularizer=reg())(relu6_1)
 	relu6_2 = LeakyReLU(relu_leak, name="relu6_2")(conv6_2)
@@ -138,12 +145,15 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, batch_n
 	#uprelu3 = LeakyReLU(relu_leak, name="uprelu3")(upconv3)
 
 
-
-	stage1_out_cropped = Cropping3D(cropping=102)(stage1_out)
-	stage7_in = Concatenate()([upsamp3, stage1_out_cropped])
+	if skip_conns:
+		stage1_out_cropped = Cropping3D(cropping=102)(stage1_out)
+		stage7_in = Concatenate()([upsamp3, stage1_out_cropped])
+	else:
+		stage7_in = upsamp3
 	filter_count //= filter_scale
 
-	conv7_1 = Conv3D(filter_count, (3,3,3), name="conv7_1", padding="valid", kernel_regularizer=reg())(stage7_in)
+	conv7_1_name = "conv7_1_" + ("sc" if skip_conns else "nsc")
+	conv7_1 = Conv3D(filter_count, (3,3,3), name=conv7_1_name, padding="valid", kernel_regularizer=reg())(stage7_in)
 	relu7_1 = LeakyReLU(relu_leak, name="relu7_1")(conv7_1)
 	conv7_2 = Conv3D(filter_count, (3,3,3), name="conv7_2", padding="valid", kernel_regularizer=reg())(relu7_1)
 	relu7_2 = LeakyReLU(relu_leak, name="relu7_2")(conv7_2)
@@ -157,10 +167,11 @@ def get_generator_arch_a(init_filters=12, filter_scale=3, relu_leak=0.2, batch_n
 
 
 ## 156 with factor=2 -> output size of 68
-def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
+def get_generator_arch_b(skip_conns=True, init_filters=32, filter_scale=2, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
 	init_filters=int(init_filters)
 	filter_scale=int(filter_scale)
 	relu_leak=float(relu_leak)
+	skip_conns=skip_conns in ["True","true",True]
 	batch_norm=batch_norm in ["True","true",True]
 	bn_momentum=float(bn_momentum)
 	regularization=float(regularization)
@@ -245,12 +256,15 @@ def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, batch_n
 	#uprelu1 = LeakyReLU(relu_leak, name="uprelu1")(upconv1)
 
 
-
-	stage3_out_cropped = Cropping3D(cropping=4)(stage3_out)
-	stage5_in = Concatenate()([upsamp1, stage3_out_cropped])
+	if skip_conns:
+		stage3_out_cropped = Cropping3D(cropping=4)(stage3_out)
+		stage5_in = Concatenate()([upsamp1, stage3_out_cropped])
+	else:
+		stage5_in = upsamp1
 	filter_count //= filter_scale
 
-	conv5_1 = Conv3D(filter_count, (3,3,3), name="conv5_1", padding="valid", kernel_regularizer=reg())(stage5_in)
+	conv5_1_name = "conv5_1_" + ("sc" if skip_conns else "nsc")
+	conv5_1 = Conv3D(filter_count, (3,3,3), name=conv5_1_name, padding="valid", kernel_regularizer=reg())(stage5_in)
 	relu5_1 = LeakyReLU(relu_leak, name="relu5_1")(conv5_1)
 	conv5_2 = Conv3D(filter_count, (3,3,3), name="conv5_2", padding="valid", kernel_regularizer=reg())(relu5_1)
 	relu5_2 = LeakyReLU(relu_leak, name="relu5_2")(conv5_2)
@@ -266,12 +280,15 @@ def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, batch_n
 	#uprelu2 = LeakyReLU(relu_leak, name="uprelu2")(upconv2)
 
 
-
-	stage2_out_cropped = Cropping3D(cropping=16)(stage2_out)
-	stage6_in = Concatenate()([upsamp2, stage2_out_cropped])
+	if skip_conns:
+		stage2_out_cropped = Cropping3D(cropping=16)(stage2_out)
+		stage6_in = Concatenate()([upsamp2, stage2_out_cropped])
+	else:
+		stage6_in = upsamp2
 	filter_count //= filter_scale
 
-	conv6_1 = Conv3D(filter_count, (3,3,3), name="conv6_1", padding="valid", kernel_regularizer=reg())(stage6_in)
+	conv6_1_name = "conv6_1_" + ("sc" if skip_conns else "nsc")
+	conv6_1 = Conv3D(filter_count, (3,3,3), name=conv6_1_name, padding="valid", kernel_regularizer=reg())(stage6_in)
 	relu6_1 = LeakyReLU(relu_leak, name="relu6_1")(conv6_1)
 	conv6_2 = Conv3D(filter_count, (3,3,3), name="conv6_2", padding="valid", kernel_regularizer=reg())(relu6_1)
 	relu6_2 = LeakyReLU(relu_leak, name="relu6_2")(conv6_2)
@@ -287,12 +304,15 @@ def get_generator_arch_b(init_filters=32, filter_scale=2, relu_leak=0.2, batch_n
 	#uprelu3 = LeakyReLU(relu_leak, name="uprelu3")(upconv3)
 
 
-
-	stage1_out_cropped = Cropping3D(cropping=40)(stage1_out)
-	stage7_in = Concatenate()([upsamp3, stage1_out_cropped])
+	if skip_conns:
+		stage1_out_cropped = Cropping3D(cropping=40)(stage1_out)
+		stage7_in = Concatenate()([upsamp3, stage1_out_cropped])
+	else:
+		stage7_in = upsamp3
 	filter_count //= filter_scale
 
-	conv7_1 = Conv3D(filter_count, (3,3,3), name="conv7_1", padding="valid", kernel_regularizer=reg())(stage7_in)
+	conv7_1_name = "conv7_1_" + ("sc" if skip_conns else "nsc")
+	conv7_1 = Conv3D(filter_count, (3,3,3), name=conv7_1_name, padding="valid", kernel_regularizer=reg())(stage7_in)
 	relu7_1 = LeakyReLU(relu_leak, name="relu7_1")(conv7_1)
 	conv7_2 = Conv3D(filter_count, (3,3,3), name="conv7_2", padding="valid", kernel_regularizer=reg())(relu7_1)
 	relu7_2 = LeakyReLU(relu_leak, name="relu7_2")(conv7_2)
