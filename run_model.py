@@ -57,6 +57,8 @@ def handle_pretrain(global_args, pretrain_args):
 		minibatch_size=minibatch_size, num_minibatch=num_minibatch, input_shape=input_shape, output_shape=output_shape,
 		valid_generator=valid_data_generator, base_save_dir=base_save_dir)
 
+	generator.save(os.path.join(base_save_dir, "pretrained-generator.h5"))
+
 
 
 def handle_train(generator, global_args, train_args):
