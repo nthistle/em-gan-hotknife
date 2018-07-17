@@ -327,6 +327,21 @@ def get_generator_arch_b(skip_conns=True, init_filters=32, filter_scale=2, relu_
 
 
 
+def load_weights_compat(new_model, old_model, load_bn=True):
+	for layer in old_model.layers:
+		is_batchnorm = (layer.name[:2]=="bn")
+		is_skipconn = (layer.name[-3:] == "nsc")
+		if is_batchnorm:
+			if load_bn:
+				new_model.get_layer(layer.name).set_weights(layer.get_weights())
+		elif is_skipconn:  ## Load into bottom-most of the dims
+			new_m_weights = new_model.get_layer(layer.name[:-3] + "sc").get_weights()
+			old_m_weights = layer.get_weights()
+			new_m_weights[1] = old_m_weights[1] # biases don't change
+			new_m_weights[0][:,:,:,:old_m_weights[0].shape[3],:] = old_m_weights[0]
+			new_model.get_layer(layer.name[:-3] + "sc").set_weights(new_m_weights)
+		else:
+			new_model.get_layer(layer.name).set_weights(layer.get_weights())
 
 
 
