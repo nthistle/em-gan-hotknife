@@ -344,6 +344,23 @@ def load_weights_compat(new_model, old_model, load_bn=True):
 			new_model.get_layer(layer.name).set_weights(layer.get_weights())
 
 
+def autodetect_skipconn(model):
+	""" Automatically detects whether skip connections are present in the model.
+	This works based off of layer names only, and assumes any model with a layer ending
+	in "nsc" (no skip connection) has no skip connections, and the opposite for any
+	model with a layer ending in "_sc" (skip connections).
+	"""
+	for layer in model.layers:
+		try:
+			if layer.name[:-3] == "nsc":
+				return False
+			elif layer.name[:-3] == "_sc":
+				return True
+		except:
+			pass
+	return True
+
+
 
 global ARCHITECTURES
 
