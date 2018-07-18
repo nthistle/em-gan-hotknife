@@ -148,7 +148,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 
 			## Record Losses
 			d_loss = d_loss_new if d_loss is None else np.add(d_loss, d_loss_new)
-			g_loss, g_loss_penalty = g_loss_new, g_loss_penalty_new if g_loss is None else np.add(g_loss, g_loss_new), np.add(g_loss_penalty, g_loss_penalty_new)
+			g_loss, g_loss_penalty = (g_loss_new, g_loss_penalty_new) if g_loss is None else (np.add(g_loss, g_loss_new), np.add(g_loss_penalty, g_loss_penalty_new))
 
 
 		update_and_print_history(epoch=epoch, d_loss=d_loss[0], d_acc=d_loss[1], g_loss=g_loss, g_penalty=g_loss_penalty)
