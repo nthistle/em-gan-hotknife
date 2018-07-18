@@ -72,6 +72,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 	discriminator.trainable = False
 	disc_pred = discriminator(fake_block)
 	combined = Model(z, disc_pred)
+	combined.compile(loss='binary_crossentropy', optimizer=generator_optimizer)
 
 	test_sample = gap_generator.__next__()
 
