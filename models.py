@@ -323,7 +323,91 @@ def get_generator_arch_b(skip_conns=True, init_filters=32, filter_scale=2, relu_
 	return Model(input_layer, output_layer)
 
 
-## TODO ADD NEW DISCRIMINATOR MODELS
+
+
+
+
+
+
+## takes size 68^3
+def get_discriminator_arch_b(init_filters=32, filter_scale=3, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
+	init_filters=int(init_filters)
+	filter_scale=int(filter_scale)
+	relu_leak=float(relu_leak)
+	batch_norm=batch_norm in ["True","true",True]
+	bn_momentum=float(bn_momentum)
+	regularization=float(regularization)
+
+
+	if regularization > 0.0:
+		reg = lambda : L1L2(regularization, regularization)
+	else:
+		reg = lambda : None
+
+	input_layer = Input(shape = (68,68,68,1))
+
+	filter_count = init_filters
+	stage1_in = input_layer
+	conv1_1 = Conv3D(filter_count, (3,3,3), name="conv1_1", padding="valid", kernel_regularizer=reg())(stage1_in)
+	relu1_1 = LeakyReLU(relu_leak, name="relu1_1")(conv1_1)
+	conv1_2 = Conv3D(filter_count, (3,3,3), name="conv1_2", padding="valid", kernel_regularizer=reg())(relu1_1)
+	relu1_2 = LeakyReLU(relu_leak, name="relu1_2")(conv1_2)
+
+	if batch_norm:
+		bn1 = BatchNormalization(momentum=bn_momentum, name="bn1")(relu1_2)
+		stage1_out = bn1
+	else:
+		stage1_out = relu1_2
+
+	pool1 = MaxPooling3D((2,2,2), name="pool1")(stage1_out)
+
+
+
+	filter_count *= filter_scale
+	stage2_in = pool1
+
+	conv2_1 = Conv3D(filter_count, (3,3,3), name="conv2_1", padding="valid", kernel_regularizer=reg())(stage2_in)
+	relu2_1 = LeakyReLU(relu_leak, name="relu2_1")(conv2_1)
+	conv2_2 = Conv3D(filter_count, (3,3,3), name="conv2_2", padding="valid", kernel_regularizer=reg())(relu2_1)
+	relu2_2 = LeakyReLU(relu_leak, name="relu2_2")(conv2_2)
+
+	if batch_norm:
+		bn2 = BatchNormalization(momentum=bn_momentum, name="bn2")(relu2_2)
+		stage2_out = bn2
+	else:
+		stage2_out = relu2_2
+
+	pool2 = MaxPooling3D((2,2,2), name="pool2")(stage2_out)
+
+
+
+	filter_count *= filter_scale
+	stage3_in = pool2
+
+	conv3_1 = Conv3D(filter_count, (3,3,3), name="conv3_1", padding="valid", kernel_regularizer=reg())(stage3_in)
+	relu3_1 = LeakyReLU(relu_leak, name="relu3_1")(conv3_1)
+	conv3_2 = Conv3D(filter_count, (3,3,3), name="conv3_2", padding="valid", kernel_regularizer=reg())(relu3_1)
+	relu3_2 = LeakyReLU(relu_leak, name="relu3_2")(conv3_2)
+
+	if batch_norm:
+		bn3 = BatchNormalization(momentum=bn_momentum, name="bn3")(relu3_2)
+		stage3_out = bn3
+	else:
+		stage3_out = relu3_2
+
+	pool3 = MaxPooling3D((2,2,2), name="pool3")(stage3_out)
+
+	flatten1 = Flatten(name="flatten1")(pool3)
+	dense1 = Dense(32, name="dense1")(flatten1)
+	relu4 = LeakyReLU(relu_leak, name="relu4")(dense1)
+
+	dense2 = Dense(1, activation="sigmoid", name="dense2")(relu4)
+
+	output_layer = dense2
+
+	return Model(input_layer, output_layer)
+
+
 
 
 
@@ -374,8 +458,10 @@ ARCHITECTURES = {
 		"b":(get_generator_arch_b,(156,156,156),(68,68,68))
 	},
 	"discriminator":{
+		"b":(get_discriminator_arch_b,(68,68,68))
 	}
 }
 
 ## Set Defaults
 ARCHITECTURES["generator"]["default"] = ARCHITECTURES["generator"]["b"]
+ARCHITECTURES["discriminator"]["default"] = ARCHITECTURES["discriminator"]["b"]
