@@ -66,7 +66,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 	penalty = Model(penalty_z, generator(penalty_z))
 	penalty.compile(loss=get_masked_loss(minibatch_size, output_shape, generator_mask_size, gap_index), optimizer=penalty_optimizer)
 
-	z = Input(shape=input_shape)
+	z = Input(shape=input_shape+(1,))
 	fake_block = generator(z)
 	discriminator.trainable = False
 	disc_pred = discriminator(fake_block)
@@ -77,11 +77,11 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 	history_cols = ["epoch","d_loss","d_acc","g_loss","g_penalty"]
 	history = {col: [] for col in history_cols}
 
-	if not os.path.exists(os.path.join(base_save_dir, "train", "model-saves")):
-		os.makedirs(os.path.join(base_save_dir, "train", "model-saves"))
+	if not os.path.exists(os.path.join(base_save_dir, "model-saves")):
+		os.makedirs(os.path.join(base_save_dir, "model-saves"))
 
-	if not os.path.exists(os.path.join(base_save_dir, "train", "samples")):
-		os.makedirs(os.path.join(base_save_dir, "train", "samples"))
+	if not os.path.exists(os.path.join(base_save_dir, "samples")):
+		os.makedirs(os.path.join(base_save_dir, "samples"))
 
 
 	def update_and_print_history(epoch, d_loss, d_acc, g_loss, g_penalty):
@@ -154,10 +154,10 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 		sample_and_write_output(output_directory=os.path.join(base_save_dir, "train", "samples"), epoch=epoch)
 
 		if (epoch)%15 == 0:
-			generator.save(os.path.join(base_save_dir, "train", "model-saves", "generator_train_epoch_%03d.h5"%(epoch+1)))
-			discriminator.save(os.path.join(base_save_dir, "train", "model-saves", "discriminator_train_epoch_%03d.h5"%(epoch+1)))
+			generator.save(os.path.join(base_save_dir, "model-saves", "generator_train_epoch_%03d.h5"%(epoch+1)))
+			discriminator.save(os.path.join(base_save_dir, "model-saves", "discriminator_train_epoch_%03d.h5"%(epoch+1)))
 
-	with open(os.path.join(base_save_dir, "train", "history.csv"),"w") as f:
+	with open(os.path.join(base_save_dir, "history.csv"),"w") as f:
 		pandas.DataFrame(history).reindex(columns=history_cols).to_csv(f, index=False)
 
 	return generator

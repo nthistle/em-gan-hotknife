@@ -39,9 +39,10 @@ def handle_pretrain(global_args, pretrain_args):
 	architecture_specs = models.ARCHITECTURES["generator"][pretrain_args["generator_architecture"]]
 
 	generator_constructor_args = {arg[14:]:pretrain_args[arg] for arg in pretrain_args if arg[:14]=="generator_arg_"}
+	print(f"Detected {len(generator_constructor_args)} arguments for the generator constructor")
 	generator = architecture_specs[0](**generator_constructor_args) #invoke constructor with provided args
 
-	generator_optimizer = Adam(lr=float(pretrain_args["generator_learning_rate"]))
+	generator_optimizer = Adam(lr=float(pretrain_args["generator_learning_rate"])) ## TODO do this based on cfg
 	num_epochs = int(pretrain_args["num_epochs"])
 	num_minibatch = int(pretrain_args["num_minibatch"])
 	minibatch_size = int(pretrain_args["minibatch_size"])
@@ -76,8 +77,49 @@ def handle_train(generator, global_args, train_args):
 	generator - Pretrained model, if pretraining was also done this run. Otherwise, None, in which case
 				it is loaded from train_args['pretrained_model']
 	"""
+	d_architecture_specs = models.ARCHITECTURES["discriminator"][pretrain_args["discriminator_architecture"]]
 
-	pass
+	discriminator_constructor_args = {arg[18:]:pretrain_args[arg] for arg in pretrain_args if arg[:18]=="discriminator_arg_"}
+	print(f"Detected {len(generator_constructor_args)} arguments for the discriminator constructor")
+	discriminator = d_architecture_specs[0](**discriminator_constructor_args)
+
+	if generator is None:
+		generator = load_model(train_args["pretrained_model"])
+
+	generator_optimizer = Adam(lr=float(train_args["generator_learning_rate"]))
+	discriminator_optimizer = Adam(lr=float(train_args["discriminator_learning_rate"]))
+	penalty_optimizer = Adam(lr=float(train_args["penalty_learning_rate"]))
+	num_epochs = int(train_args["num_epochs"])
+	num_minibatch = int(train_args["num_minibatch"])
+	minibatch_size = int(train_args["minibatch_size"])
+
+	instance_noise = str2bool(train_args["instance_noise"],"train.instance_noise")
+	instance_noise_profile = [float(train_args["instance_noise_std_dev"])]*num_epochs
+
+	input_shape = *(dim.value for dim in generator.input.shape[1:4]),
+	output_shape = *(dim.value for dim in generator.output.shape[1:4]),
+
+	generator_mask_size = int(train_args["generator_mask_size"])
+
+	gap_index = int(global_args["gap_location"])
+
+	valid_generator = data_utils.valid_data_generator_n5(global_args["valid_container"], global_args["valid_dataset"], output_shape, minibatch_size)
+	gap_generator = data_utils.gap_data_generator_n5(global_args["gap_container"], global_args["gap_dataset"], input_shape, minibatch_size, gap_index)
+
+	base_save_dir = os.path.join(global_args["run_output"], "train")
+	os.makedirs(base_save_dir)
+
+	train(generator=generator, discriminator=discriminator, generator_optimizer=generator_optimizer,
+		discriminator_optimizer=discriminator_optimizer, penalty_optimizer=penalty_optimizer, epochs=num_epochs,
+		minibatch_size=minibatch_size, num_minibatch=num_minibatch, instance_noise=instance_noise,
+		instance_noise_profile=instance_noise_profile, input_shape=input_shape, output_shape=output_shape,
+		generator_mask_size=generator_mask_size, valid_generator=valid_generator, gap_generator=gap_generator,
+		gap_index=gap_index, base_save_dir=base_save_dir)
+
+	generator.save(os.path.join(base_save_dir, "generator-final.h5"))
+	discriminator.save(os.path.join(base_save_dir, "discriminator-final.h5"))
+
+
 
 
 def main():
@@ -99,7 +141,7 @@ def main():
 
 	if train:
 		# handle train here
-		handle_train(generator, config["global"], config["pretrain"])
+		handle_train(generator, config["global"], config["train"])
 
 
 if __name__=="__main__":
