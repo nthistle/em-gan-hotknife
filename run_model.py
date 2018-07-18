@@ -77,9 +77,9 @@ def handle_train(generator, global_args, train_args):
 	generator - Pretrained model, if pretraining was also done this run. Otherwise, None, in which case
 				it is loaded from train_args['pretrained_model']
 	"""
-	d_architecture_specs = models.ARCHITECTURES["discriminator"][pretrain_args["discriminator_architecture"]]
+	d_architecture_specs = models.ARCHITECTURES["discriminator"][train_args["discriminator_architecture"]]
 
-	discriminator_constructor_args = {arg[18:]:pretrain_args[arg] for arg in pretrain_args if arg[:18]=="discriminator_arg_"}
+	discriminator_constructor_args = {arg[18:]:train_args[arg] for arg in train_args if arg[:18]=="discriminator_arg_"}
 	print(f"Detected {len(generator_constructor_args)} arguments for the discriminator constructor")
 	discriminator = d_architecture_specs[0](**discriminator_constructor_args)
 
