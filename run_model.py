@@ -57,7 +57,16 @@ def handle_pretrain(global_args, pretrain_args):
 		minibatch_size=minibatch_size, num_minibatch=num_minibatch, input_shape=input_shape, output_shape=output_shape,
 		valid_generator=valid_data_generator, base_save_dir=base_save_dir)
 
-	generator.save(os.path.join(base_save_dir, "pretrained-generator.h5"))
+	if models.autodetect_skipconn(generator):
+		# if it has skip connections
+		generator.save(os.path.join(base_save_dir, "pretrained-generator.h5"))
+	else:
+		# if it doesn't, add them
+		generator.save(os.path.join(base_save_dir, "pretrained-generator-nsc.h5"))
+		generator_constructor_args["skip_conns"] = True
+		generator_sc = architecture_specs[0](**generator_constructor_args)
+		models.load_weights_compat(generator_sc, generator, True)
+		generator_sc.save(os.path.join(base_save_dir, "pretrained-generator.h5"))
 
 
 
