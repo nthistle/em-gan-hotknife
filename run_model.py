@@ -111,7 +111,7 @@ def handle_train(generator, global_args, train_args):
 	base_save_dir = os.path.join(global_args["run_output"], "train")
 	os.makedirs(base_save_dir)
 
-	train(generator=generator, discriminator=discriminator, generator_optimizer=generator_optimizer,
+	train.train(generator=generator, discriminator=discriminator, generator_optimizer=generator_optimizer,
 		discriminator_optimizer=discriminator_optimizer, penalty_optimizer=penalty_optimizer, epochs=num_epochs,
 		minibatch_size=minibatch_size, num_minibatch=num_minibatch, instance_noise=instance_noise,
 		instance_noise_profile=instance_noise_profile, input_shape=input_shape, output_shape=output_shape,
