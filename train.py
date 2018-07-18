@@ -1,5 +1,6 @@
 from keras.layers import Input
 from keras.losses import mean_squared_error
+from keras.models import Model
 from PIL import Image
 
 import numpy as np
