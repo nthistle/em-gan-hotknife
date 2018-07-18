@@ -153,7 +153,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 
 		update_and_print_history(epoch=epoch, d_loss=d_loss[0], d_acc=d_loss[1], g_loss=g_loss, g_penalty=g_loss_penalty)
 
-		sample_and_write_output(output_directory=os.path.join(base_save_dir, "train", "samples"), epoch=epoch)
+		sample_and_write_output(output_directory=os.path.join(base_save_dir, "samples"), epoch=epoch)
 
 		if (epoch)%15 == 0:
 			generator.save(os.path.join(base_save_dir, "model-saves", "generator_train_epoch_%03d.h5"%(epoch+1)))
