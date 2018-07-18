@@ -69,6 +69,8 @@ def handle_pretrain(global_args, pretrain_args):
 		models.load_weights_compat(generator_sc, generator, True)
 		generator_sc.save(os.path.join(base_save_dir, "pretrained-generator.h5"))
 
+	return generator
+
 
 
 def handle_train(generator, global_args, train_args):
@@ -118,6 +120,8 @@ def handle_train(generator, global_args, train_args):
 
 	generator.save(os.path.join(base_save_dir, "generator-final.h5"))
 	discriminator.save(os.path.join(base_save_dir, "discriminator-final.h5"))
+
+	return (generator, discriminator)
 
 
 
