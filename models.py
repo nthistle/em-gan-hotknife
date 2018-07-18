@@ -436,9 +436,9 @@ def autodetect_skipconn(model):
 	"""
 	for layer in model.layers:
 		try:
-			if layer.name[:-3] == "nsc":
+			if layer.name[-3:] == "nsc":
 				return False
-			elif layer.name[:-3] == "_sc":
+			elif layer.name[-3:] == "_sc":
 				return True
 		except:
 			pass
