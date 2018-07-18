@@ -80,7 +80,7 @@ def handle_train(generator, global_args, train_args):
 	d_architecture_specs = models.ARCHITECTURES["discriminator"][train_args["discriminator_architecture"]]
 
 	discriminator_constructor_args = {arg[18:]:train_args[arg] for arg in train_args if arg[:18]=="discriminator_arg_"}
-	print(f"Detected {len(generator_constructor_args)} arguments for the discriminator constructor")
+	print(f"Detected {len(discriminator_constructor_args)} arguments for the discriminator constructor")
 	discriminator = d_architecture_specs[0](**discriminator_constructor_args)
 
 	if generator is None:
