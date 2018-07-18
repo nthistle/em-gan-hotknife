@@ -23,7 +23,7 @@ def get_generator_arch_a(skip_conns=True, init_filters=12, filter_scale=3, relu_
 	else:
 		reg = lambda : None
 
-	input_layer = Input(shape = (295,295,295,1))
+	input_layer = Input(shape = (295,295,295,1), name="input1")
 
 	filter_count = init_filters
 	stage1_in = input_layer
@@ -182,7 +182,7 @@ def get_generator_arch_b(skip_conns=True, init_filters=32, filter_scale=2, relu_
 	else:
 		reg = lambda : None
 
-	input_layer = Input(shape = (156,156,156,1))
+	input_layer = Input(shape = (156,156,156,1), name="input1")
 
 	filter_count = init_filters
 	stage1_in = input_layer
