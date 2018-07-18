@@ -116,7 +116,7 @@ def handle_train(generator, global_args, train_args):
 		minibatch_size=minibatch_size, num_minibatch=num_minibatch, instance_noise=instance_noise,
 		instance_noise_profile=instance_noise_profile, input_shape=input_shape, output_shape=output_shape,
 		generator_mask_size=generator_mask_size, valid_generator=valid_generator, gap_generator=gap_generator,
-		gap_index=gap_index, base_save_dir=base_save_dir)
+		gap_index=0, base_save_dir=base_save_dir)
 
 	generator.save(os.path.join(base_save_dir, "generator-final.h5"))
 	discriminator.save(os.path.join(base_save_dir, "discriminator-final.h5"))
