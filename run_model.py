@@ -132,8 +132,8 @@ def main():
 	args = get_argparser().parse_args()
 	config = configparser.ConfigParser()
 	config.read(args.config)
-	train = str2bool(config["global"]["train"], "global.train")
-	pretrain = str2bool(config["global"]["pretrain"], "global.pretrain")
+	train = str2bool(config["global"]["train"], "global.train") if "train" in config["global"] else False
+	pretrain = str2bool(config["global"]["pretrain"], "global.pretrain") if "pretrain" in config["global"] else False
 
 	if not train and not pretrain:
 		raise Exception("Nothing to do!")
