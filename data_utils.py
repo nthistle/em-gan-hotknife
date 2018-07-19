@@ -21,7 +21,7 @@ def valid_data_generator_n5(container_path, dataset_path, sample_shape, batch_si
 
 
 # Uses zyx order
-def gap_data_generator_n5(container_path, dataset_path, sample_shape, batch_size, gap_location, gap_variance=1):
+def gap_data_generator_n5(container_path, dataset_path, sample_shape, batch_size, gap_location, gap_variance=1, gap_blend=True):
 	data = z5py.File(container_path, use_zarr_format=False)[dataset_path]
 
 	while True:
@@ -36,5 +36,11 @@ def gap_data_generator_n5(container_path, dataset_path, sample_shape, batch_size
 			batch[k, :, :, :, 0] = data[z_start[k]:z_start[k]+sample_shape[0],
 										y_start[k]:y_start[k]+sample_shape[1],
 										x_start[k]:x_start[k]+sample_shape[2]]
+			if gap_blend:
+				relative_gap = gap_location - z_start[k]
+				batch[k, relative_gap, :, :, 0] = np.mean(
+					np.concatenate((batch[k, relative_gap-1:relative_gap, :, :, 0], batch[k, relative_gap+1:relative_gap+2, :, :, 0],),
+					 axis=0),
+					 axis=0)
 
 		yield batch/255.
