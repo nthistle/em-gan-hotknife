@@ -69,6 +69,7 @@ def handle_pretrain(global_args, pretrain_args):
 		generator_sc = architecture_specs[0](**generator_constructor_args)
 		models.load_weights_compat(generator_sc, generator, True)
 		generator_sc.save(os.path.join(base_save_dir, "pretrained-generator.h5"))
+		generator = generator_sc
 
 	return generator
 
