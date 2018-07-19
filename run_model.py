@@ -18,6 +18,7 @@ import tensorflow as tf
 import os
 import pandas
 import sys
+import shutil
 
 import argparse
 import configparser
@@ -135,6 +136,13 @@ def main():
 
 	if not train and not pretrain:
 		raise Exception("Nothing to do!")
+
+	save_path = config["global"]["run_output"]
+
+	if not os.path.exists(save_path):
+		os.makedirs(save_path)
+
+	shutil.copyfile(args.config, os.path.join(save_path,"run_parameters.cfg"))
 
 	generator = None
 
