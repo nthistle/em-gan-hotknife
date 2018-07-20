@@ -337,6 +337,7 @@ def get_discriminator_arch_b(init_filters=32, filter_scale=3, relu_leak=0.2, bat
 	batch_norm=batch_norm in ["True","true",True]
 	bn_momentum=float(bn_momentum)
 	regularization=float(regularization)
+	dropout=float(dropout)
 
 
 	if regularization > 0.0:
