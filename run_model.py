@@ -98,7 +98,7 @@ def handle_train(generator, global_args, train_args):
 	minibatch_size = int(train_args["minibatch_size"])
 
 	instance_noise = str2bool(train_args["instance_noise"],"train.instance_noise")
-	instance_noise_profile = [float(train_args["instance_noise_std_dev"])]*num_epochs
+	instance_noise_profile = ([float(train_args["instance_noise_std_dev"])]*num_epochs) if instance_noise else 0
 
 	input_shape = *(dim.value for dim in generator.input.shape[1:4]),
 	output_shape = *(dim.value for dim in generator.output.shape[1:4]),
