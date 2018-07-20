@@ -1,4 +1,4 @@
-from keras.layers import Conv3D, Conv3DTranspose, UpSampling3D, Dense, Reshape, Flatten, Activation, Input, MaxPooling3D, Cropping3D, Concatenate, BatchNormalization
+from keras.layers import Conv3D, Conv3DTranspose, UpSampling3D, Dense, Reshape, Flatten, Activation, Input, MaxPooling3D, Cropping3D, Concatenate, BatchNormalization, Dropout
 from keras.models import Sequential, Model
 from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import Adam
@@ -330,7 +330,7 @@ def get_generator_arch_b(skip_conns=True, init_filters=32, filter_scale=2, relu_
 
 
 ## takes size 68^3
-def get_discriminator_arch_b(init_filters=32, filter_scale=3, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
+def get_discriminator_arch_b(init_filters=32, filter_scale=3, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0, dropout=0.0):
 	init_filters=int(init_filters)
 	filter_scale=int(filter_scale)
 	relu_leak=float(relu_leak)
@@ -350,8 +350,12 @@ def get_discriminator_arch_b(init_filters=32, filter_scale=3, relu_leak=0.2, bat
 	stage1_in = input_layer
 	conv1_1 = Conv3D(filter_count, (3,3,3), name="conv1_1", padding="valid", kernel_regularizer=reg())(stage1_in)
 	relu1_1 = LeakyReLU(relu_leak, name="relu1_1")(conv1_1)
+	if dropout > 0:
+		relu1_1 = Dropout(dropout, name="drop1_1")(relu1_1)
 	conv1_2 = Conv3D(filter_count, (3,3,3), name="conv1_2", padding="valid", kernel_regularizer=reg())(relu1_1)
 	relu1_2 = LeakyReLU(relu_leak, name="relu1_2")(conv1_2)
+	if dropout > 0:
+		relu1_2 = Dropout(dropout, name="drop1_2")(relu1_2)
 
 	if batch_norm:
 		bn1 = BatchNormalization(momentum=bn_momentum, name="bn1")(relu1_2)
@@ -368,8 +372,12 @@ def get_discriminator_arch_b(init_filters=32, filter_scale=3, relu_leak=0.2, bat
 
 	conv2_1 = Conv3D(filter_count, (3,3,3), name="conv2_1", padding="valid", kernel_regularizer=reg())(stage2_in)
 	relu2_1 = LeakyReLU(relu_leak, name="relu2_1")(conv2_1)
+	if dropout > 0:
+		relu2_1 = Dropout(dropout, name="drop2_1")(relu2_1)
 	conv2_2 = Conv3D(filter_count, (3,3,3), name="conv2_2", padding="valid", kernel_regularizer=reg())(relu2_1)
 	relu2_2 = LeakyReLU(relu_leak, name="relu2_2")(conv2_2)
+	if dropout > 0:
+		relu2_2 = Dropout(dropout, name="drop2_2")(relu2_2)
 
 	if batch_norm:
 		bn2 = BatchNormalization(momentum=bn_momentum, name="bn2")(relu2_2)
@@ -386,8 +394,12 @@ def get_discriminator_arch_b(init_filters=32, filter_scale=3, relu_leak=0.2, bat
 
 	conv3_1 = Conv3D(filter_count, (3,3,3), name="conv3_1", padding="valid", kernel_regularizer=reg())(stage3_in)
 	relu3_1 = LeakyReLU(relu_leak, name="relu3_1")(conv3_1)
+	if dropout > 0:
+		relu3_1 = Dropout(dropout, name="drop3_1")(relu3_1)
 	conv3_2 = Conv3D(filter_count, (3,3,3), name="conv3_2", padding="valid", kernel_regularizer=reg())(relu3_1)
 	relu3_2 = LeakyReLU(relu_leak, name="relu3_2")(conv3_2)
+	if dropout > 0:
+		relu3_2 = Dropout(dropout, name="drop3_2")(relu3_2)
 
 	if batch_norm:
 		bn3 = BatchNormalization(momentum=bn_momentum, name="bn3")(relu3_2)
