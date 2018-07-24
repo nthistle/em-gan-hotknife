@@ -105,7 +105,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 		block_height = output_shape[(gap_index+1)%3]
 		block_length = output_shape[(gap_index+2)%3]
 		slices = [slice(None)]*3
-		im = np.zeros((18*2*block_height, width*block_length))
+		im = np.zeros((18*2*block_height, (width+2)*block_length))
 		#sample_prediction = np.zeros((18, *output_shape, 1))
 		for i in range(18): ## TODO: do this in minibatches
 			sample_prediction = generator.predict(persistent_sample[i:i+1])[0]
@@ -113,6 +113,14 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 				slices[gap_index] = slice(round(j*output_shape[gap_index]/width),round(j*output_shape[gap_index]/width)+1)
 				im[i*2*block_height:(i*2+1)*block_height,block_length*j:block_length*(j+1)] = persistent_sample_center[i, slices[0], slices[1], slices[2], 0]
 				im[(i*2+1)*block_height:(i*2+2)*block_height,block_length*j:block_length*(j+1)] = sample_prediction[slices[0], slices[1], slices[2], 0]
+
+			im[i*2*block_height:(i*2+1)*block_height,block_length*width:block_length*(width+1)] = persistent_sample_center[i, :, output_shape[1]//2, :, 0]
+			im[(i*2+1)*block_height:(i*2+2)*block_height,block_length*width:block_length*(width+1)] = sample_prediction[:, output_shape[1]//2, :, 0]
+
+			im[i*2*block_height:(i*2+1)*block_height,block_length*(width+1):block_length*(width+2)] = persistent_sample_center[i, :, :, output_shape[2]//2, 0]
+			im[(i*2+1)*block_height:(i*2+2)*block_height,block_length*(width+1):block_length*(width+2)] = sample_prediction[:, :, output_shape[2]//2, 0]
+			# hard coded for now
+
 		Image.fromarray(np.clip((255*im).round(),0,255).astype(np.uint8)).save(os.path.join(output_directory, "sample_epoch_%03d.png" % epoch))
 
 
