@@ -1,5 +1,5 @@
 from keras.layers import Input
-from keras.losses import mean_squared_error
+from keras.losses import mean_squared_error, mean_absolute_error
 from keras.models import Model
 from PIL import Image
 
@@ -12,7 +12,7 @@ import pandas
 import argparse
 
 
-def get_masked_loss(batch_size, output_shape, mask_size, slice_index):
+def get_masked_loss(batch_size, output_shape, mask_size, slice_index, base_loss=mean_absolute_error):
 
 	mask = np.zeros((batch_size,) + output_shape + (1,), dtype=np.float32)
 	slices = [slice(None)]*3
@@ -31,7 +31,7 @@ def get_masked_loss(batch_size, output_shape, mask_size, slice_index):
 	def masked_loss(y_true, y_pred):
 		y_true_masked = tf.multiply(y_true, mask)
 		y_pred_masked = tf.multiply(y_pred, mask)
-		return mean_squared_error(y_true_masked, y_pred_masked)
+		return base_loss(y_true_masked, y_pred_masked)
 
 	return masked_loss
 
