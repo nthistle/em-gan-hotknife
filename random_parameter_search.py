@@ -25,7 +25,7 @@ def main():
 	config["train"]["penalty_learning_rate"] = str(10**p_lr)
 
 	config["train"]["generator_mask_size"] = str(randint(8,20))
-	config["train"]["discriminator_arg_dropout"] = "0.0" if random()<0.4 else str(uniform(0, 2))
+	config["train"]["discriminator_arg_dropout"] = "0.0" if random()<0.4 else str(uniform(0.0, 0.2))
 	config["train"]["discriminator_arg_bn_momentum"] = str(uniform(0.8,0.999))
 
 	with open(args.output, "w") as output_cfg:
