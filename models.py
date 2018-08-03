@@ -656,6 +656,7 @@ ARCHITECTURES = {
 	},
 	"discriminator":{
 		"b":(get_discriminator_arch_b,(68,68,68))
+		"c":(get_discriminator_arch_c,(68,68,68))
 	}
 }
 
