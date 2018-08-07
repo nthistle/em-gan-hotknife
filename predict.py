@@ -18,7 +18,7 @@ def run_prediction(generator_model, input_dataset, output_dataset, zgap):
 	z_target = zgap - (input_size//2)
 	for y in range(0, input_dataset.shape[1] - input_size, output_size):
 		for x in range(0, input_dataset.shape[2] - input_size, output_size):
-			big_block = input_dataset[z_target:z_target+input_size, y:y+input_size, x:x+input_size]
+			big_block = input_dataset[z_target:z_target+input_size, y:y+input_size, x:x+input_size]/255.
 			big_block = np.expand_dims(np.expand_dims(big_block, 3), 0)
 			out_block = generator_model.predict(big_block)
 			output_dataset[zgap-(output_size//2):zgap+(output_size//2),
