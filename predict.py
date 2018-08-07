@@ -23,7 +23,7 @@ def run_prediction(generator_model, input_dataset, output_dataset, zgap):
 			out_block = generator_model.predict(big_block)
 			output_dataset[zgap-(output_size//2):zgap+(output_size//2),
 					y+((input_size-output_size)//2):y+((input_size-output_size)//2)+output_size,
-					x+((input_size-output_size)//2):x+((input_size-output_size)//2)+output_size] = out_block[0, :, :, :, 0]
+					x+((input_size-output_size)//2):x+((input_size-output_size)//2)+output_size] = 255*out_block[0, :, :, :, 0]
 			print(x,y)
 
 def main():
