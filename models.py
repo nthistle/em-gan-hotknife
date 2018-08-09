@@ -324,8 +324,9 @@ def get_generator_arch_b(skip_conns=True, init_filters=32, filter_scale=2, relu_
 
 
 
-### WIP, trying to get alignments correctish
-def get_discriminator_arch_a(init_filters=32, filter_scale=3, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0, dropout=0.0):
+
+## takes size 83^3
+def get_discriminator_arch_a(init_filters=18, filter_scale=2, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0, dropout=0.0):
 	init_filters=int(init_filters)
 	filter_scale=int(filter_scale)
 	relu_leak=float(relu_leak)
@@ -340,7 +341,7 @@ def get_discriminator_arch_a(init_filters=32, filter_scale=3, relu_leak=0.2, bat
 	else:
 		reg = lambda : None
 
-	input_layer = Input(shape = (68,68,68,1))
+	input_layer = Input(shape = (83,83,83,1))
 
 	filter_count = init_filters
 	stage1_in = input_layer
@@ -348,23 +349,20 @@ def get_discriminator_arch_a(init_filters=32, filter_scale=3, relu_leak=0.2, bat
 	relu1_1 = LeakyReLU(relu_leak, name="relu1_1")(conv1_1)
 	if dropout > 0:
 		relu1_1 = Dropout(dropout, name="drop1_1")(relu1_1)
-	conv1_2 = Conv3D(filter_count, (3,3,3), name="conv1_2", padding="valid", kernel_regularizer=reg())(relu1_1)
-	relu1_2 = LeakyReLU(relu_leak, name="relu1_2")(conv1_2)
-	if dropout > 0:
-		relu1_2 = Dropout(dropout, name="drop1_2")(relu1_2)
 
 	if batch_norm:
-		bn1 = BatchNormalization(momentum=bn_momentum, name="bn1")(relu1_2)
+		bn1 = BatchNormalization(momentum=bn_momentum, name="bn1")(relu1_1)
 		stage1_out = bn1
 	else:
-		stage1_out = relu1_2
+		stage1_out = relu1_1
 
-	pool1 = MaxPooling3D((2,2,2), name="pool1")(stage1_out)
+	filter_count *= filter_scale
+	down1 = Conv3D(filter_count, (3,3,3), strides=(3,3,3), name="down1")(stage1_out)
 
 
 
 	filter_count *= filter_scale
-	stage2_in = pool1
+	stage2_in = down1
 
 	conv2_1 = Conv3D(filter_count, (3,3,3), name="conv2_1", padding="valid", kernel_regularizer=reg())(stage2_in)
 	relu2_1 = LeakyReLU(relu_leak, name="relu2_1")(conv2_1)
@@ -374,39 +372,38 @@ def get_discriminator_arch_a(init_filters=32, filter_scale=3, relu_leak=0.2, bat
 	relu2_2 = LeakyReLU(relu_leak, name="relu2_2")(conv2_2)
 	if dropout > 0:
 		relu2_2 = Dropout(dropout, name="drop2_2")(relu2_2)
+	conv2_3 = Conv3D(filter_count, (3,3,3), name="conv2_3", padding="valid", kernel_regularizer=reg())(relu2_2)
+	relu2_3 = LeakyReLU(relu_leak, name="relu2_3")(conv2_3)
+	if dropout > 0:
+		relu2_3 = Dropout(dropout, name="drop2_3")(relu2_3)
 
 	if batch_norm:
-		bn2 = BatchNormalization(momentum=bn_momentum, name="bn2")(relu2_2)
+		bn2 = BatchNormalization(momentum=bn_momentum, name="bn2")(relu2_3)
 		stage2_out = bn2
 	else:
-		stage2_out = relu2_2
+		stage2_out = relu2_3
 
-	pool2 = MaxPooling3D((2,2,2), name="pool2")(stage2_out)
+	filter_count *= filter_scale
+	down2 = Conv3D(filter_count, (3,3,3), strides=(3,3,3), name="down2")(stage2_out)
 
 
 
 	filter_count *= filter_scale
-	stage3_in = pool2
+	stage3_in = down2
 
 	conv3_1 = Conv3D(filter_count, (3,3,3), name="conv3_1", padding="valid", kernel_regularizer=reg())(stage3_in)
 	relu3_1 = LeakyReLU(relu_leak, name="relu3_1")(conv3_1)
 	if dropout > 0:
 		relu3_1 = Dropout(dropout, name="drop3_1")(relu3_1)
-	conv3_2 = Conv3D(filter_count, (3,3,3), name="conv3_2", padding="valid", kernel_regularizer=reg())(relu3_1)
-	relu3_2 = LeakyReLU(relu_leak, name="relu3_2")(conv3_2)
-	if dropout > 0:
-		relu3_2 = Dropout(dropout, name="drop3_2")(relu3_2)
 
 	if batch_norm:
-		bn3 = BatchNormalization(momentum=bn_momentum, name="bn3")(relu3_2)
+		bn3 = BatchNormalization(momentum=bn_momentum, name="bn3")(relu3_1)
 		stage3_out = bn3
 	else:
-		stage3_out = relu3_2
+		stage3_out = relu3_1
 
-	pool3 = MaxPooling3D((2,2,2), name="pool3")(stage3_out)
-
-	flatten1 = Flatten(name="flatten1")(pool3)
-	dense1 = Dense(32, name="dense1")(flatten1)
+	flatten1 = Flatten(name="flatten1")(stage3_out)
+	dense1 = Dense(64, name="dense1")(flatten1)
 	relu4 = LeakyReLU(relu_leak, name="relu4")(dense1)
 
 	dense2 = Dense(1, activation="sigmoid", name="dense2")(relu4)
@@ -414,9 +411,6 @@ def get_discriminator_arch_a(init_filters=32, filter_scale=3, relu_leak=0.2, bat
 	output_layer = dense2
 
 	return Model(input_layer, output_layer)
-
-
-
 
 
 
@@ -648,6 +642,7 @@ global ARCHITECTURES
 ## Architecture Format:
 ## Key: "architecture name"
 ## Value: 3-tuple consisting of: (constructor_method, input_shape, output_shape)
+## (For discriminator, omit output_shape to give a 2-tuple)
 ## input_shape and output_shape are both integer 3-tuples
 ARCHITECTURES = {
 	"generator":{
@@ -655,6 +650,7 @@ ARCHITECTURES = {
 		"b":(get_generator_arch_b,(156,156,156),(68,68,68))
 	},
 	"discriminator":{
+		"a":(get_discriminator_arch_a,(83,83,83)),
 		"b":(get_discriminator_arch_b,(68,68,68)),
 		"c":(get_discriminator_arch_c,(68,68,68))
 	}
