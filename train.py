@@ -12,7 +12,7 @@ import pandas
 import argparse
 
 
-def get_masked_loss(batch_size, output_shape, mask_size, slice_index, base_loss=mean_absolute_error):
+def get_masked_loss(batch_size, output_shape, mask_size, slice_index, feather_size=0, base_loss=mean_absolute_error):
 
 	mask = np.zeros((batch_size,) + output_shape + (1,), dtype=np.float32)
 	slices = [slice(None)]*3
@@ -27,6 +27,14 @@ def get_masked_loss(batch_size, output_shape, mask_size, slice_index, base_loss=
 	# set upper to 1
 	slices[slice_index] = slice(upper_bound,None)
 	mask[:, slices[0], slices[1], slices[2], :] = 1.0
+
+	for i in range(feather_size):
+		slices[slice_index] = lower_bound - i - 1
+		mask[:, slices[0], slices[1], slices[2], :] = (i + 1.0) / (feather_size + 1.0)
+		slices[slice_index] = upper_bound + i
+		mask[:, slices[0], slices[1], slices[2], :] = (i + 1.0) / (feather_size + 1.0)
+
+	mask *= mask.size / mask.sum()
 
 	def masked_loss(y_true, y_pred):
 		y_true_masked = tf.multiply(y_true, mask)
