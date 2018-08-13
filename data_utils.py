@@ -21,6 +21,10 @@ def valid_data_generator_n5(container_path, dataset_path, sample_shape, batch_si
 
 
 # Uses zyx order
+## Gap Location is the z slice in pixels where the gap is centered
+## Gap variance is the +/- amount in z pixels when grabbing gap chunks
+## Gap blend determines whether to make the gap_location z slice an average of the layers above and below (+/- 1 z pixel)
+## (this is because in one case the gap slice is zeroed out and completely black)
 def gap_data_generator_n5(container_path, dataset_path, sample_shape, batch_size, gap_location, gap_variance=1, gap_blend=True):
 	data = z5py.File(container_path, use_zarr_format=False)[dataset_path]
 

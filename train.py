@@ -58,7 +58,7 @@ def get_center_of_block(block, target_shape):
 
 def train(generator, discriminator, generator_optimizer, discriminator_optimizer, penalty_optimizer,
 	epochs, minibatch_size, num_minibatch, instance_noise, instance_noise_profile, input_shape, output_shape,
-	generator_mask_size, valid_generator, gap_generator, gap_index, base_save_dir):
+	generator_mask_size, feather_size, valid_generator, gap_generator, gap_index, base_save_dir):
 	""" Trains the given generator using all the given parameters and generators.
 
 	valid_generator -> should be a generator that returns entirely valid data of size (minibatch_size, *output_shape, 1)
@@ -73,7 +73,7 @@ def train(generator, discriminator, generator_optimizer, discriminator_optimizer
 
 	penalty_z = Input(shape=input_shape+(1,))
 	penalty = Model(penalty_z, generator(penalty_z))
-	penalty.compile(loss=get_masked_loss(minibatch_size, output_shape, generator_mask_size, gap_index), optimizer=penalty_optimizer)
+	penalty.compile(loss=get_masked_loss(minibatch_size, output_shape, generator_mask_size, gap_index, feather_size=feather_size), optimizer=penalty_optimizer)
 
 	z = Input(shape=input_shape+(1,))
 	fake_block = generator(z)

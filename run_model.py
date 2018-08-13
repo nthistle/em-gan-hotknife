@@ -104,6 +104,7 @@ def handle_train(generator, global_args, train_args):
 	output_shape = *(dim.value for dim in generator.output.shape[1:4]),
 
 	generator_mask_size = int(train_args["generator_mask_size"])
+	feather_size = int(train_args["feather_mask_size"]) if "feather_mask_size" in train_args else 0
 
 	gap_index = int(global_args["gap_location"])
 
@@ -117,8 +118,8 @@ def handle_train(generator, global_args, train_args):
 		discriminator_optimizer=discriminator_optimizer, penalty_optimizer=penalty_optimizer, epochs=num_epochs,
 		minibatch_size=minibatch_size, num_minibatch=num_minibatch, instance_noise=instance_noise,
 		instance_noise_profile=instance_noise_profile, input_shape=input_shape, output_shape=output_shape,
-		generator_mask_size=generator_mask_size, valid_generator=valid_generator, gap_generator=gap_generator,
-		gap_index=0, base_save_dir=base_save_dir)
+		generator_mask_size=generator_mask_size, feather_size=feather_size, valid_generator=valid_generator,
+		gap_generator=gap_generator, gap_index=0, base_save_dir=base_save_dir)
 
 	generator.save(os.path.join(base_save_dir, "generator-final.h5"))
 	discriminator.save(os.path.join(base_save_dir, "discriminator-final.h5"))

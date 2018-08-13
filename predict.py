@@ -3,13 +3,16 @@ import z5py
 import argparse
 import numpy as np
 
+## Note: You have to run export CUDA_VISIBLE_DEVICES=# (replace # with GPU number) before running
+## this script, or else it will steal all the GPUs.
+
 def get_argparser():
 	parser = argparse.ArgumentParser(description="predict-hotknife")
 	parser.add_argument('-g', '--generator', type=str, help="path to generator to use for prediction", required=True)
 	parser.add_argument('-c', '--container', type=str, help="path to container to run on", required=True)
 	parser.add_argument('-i', '--input', type=str, help="input dataset (within container)", required=True)
 	parser.add_argument('-o', '--output', type=str, help="output dataset (within container)", required=True)
-	parser.add_argument('-z', '--zgap', type=int, help="location of the gap (z slice)", required=True)
+	parser.add_argument('-z', '--zgap', type=int, help="location of the gap in pixels (z slice number)", required=True)
 	return parser
 
 def run_prediction(generator_model, input_dataset, output_dataset, zgap):

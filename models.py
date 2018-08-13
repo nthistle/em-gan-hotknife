@@ -7,6 +7,23 @@ from keras.regularizers import L1L2
 import numpy as np
 
 
+## All Generators:
+
+## Skip Connections is whether to use skip connections
+## init_filters is the number of filters in the first conv layer 
+##   (usually default)
+## filter_scale determines how fast the filters scale up (filters *= filter_scale every scale level)
+##   (usually default)
+## relu_leak is the parameter for the leaky relu's
+##   (usually 0.2, default)
+## batch_norm is whether to use batch normalization layers
+##   (usually true)
+## bn_momentum is the momentum parameter for the batch norm layers (if included)
+##   (usually 0.8, default)
+## regularization is the L1L2 kernel (weight) regularizer for all convolutional layers, if specified and nonzero
+##   (usually 0, so no regularization)
+
+
 ## 295 with factor=3 -> output size of 83
 def get_generator_arch_a(skip_conns=True, init_filters=12, filter_scale=3, relu_leak=0.2, batch_norm=True, bn_momentum=0.8, regularization=0.0):
 	init_filters=int(init_filters)
@@ -152,7 +169,7 @@ def get_generator_arch_a(skip_conns=True, init_filters=12, filter_scale=3, relu_
 		stage7_in = upsamp3
 	filter_count //= filter_scale
 
-	conv7_1_name = "conv7_1_" + ("sc" if skip_conns else "nsc")
+	conv7_1_name = "conv7_1_" + ("sc" if skip_conns else "nsc") ## Used for loading weights into skip connection model from non skip connection model
 	conv7_1 = Conv3D(filter_count, (3,3,3), name=conv7_1_name, padding="valid", kernel_regularizer=reg())(stage7_in)
 	relu7_1 = LeakyReLU(relu_leak, name="relu7_1")(conv7_1)
 	conv7_2 = Conv3D(filter_count, (3,3,3), name="conv7_2", padding="valid", kernel_regularizer=reg())(relu7_1)
@@ -323,6 +340,11 @@ def get_generator_arch_b(skip_conns=True, init_filters=32, filter_scale=2, relu_
 	return Model(input_layer, output_layer)
 
 
+
+## Discriminator
+
+## dropout, if nonzero, determines the dropout rate in the dropout layers (applied after leakyrelu, before batchnorm)
+##   usually set between 0 and 0.2, higher tends to help with artifacts somewhat
 
 
 ## takes size 83^3
@@ -600,7 +622,10 @@ def get_discriminator_arch_c(init_filters=32, filter_scale=3, relu_leak=0.2, bat
 	return Model(input_layer, output_layer)
 
 
+## Loads weights from a model without skip connections into one with skip connections, 
+## leaving the weights corresponding to the skip connections alone
 
+## From old_model (no skip connections) -> into -> new_model (with skip connections)
 
 def load_weights_compat(new_model, old_model, load_bn=True):
 	for layer in old_model.layers:

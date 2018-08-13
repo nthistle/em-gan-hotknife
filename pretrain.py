@@ -17,6 +17,9 @@ def get_center_of_block(block, target_shape):
 	return block[:,slices[0],slices[1],slices[2]]
 
 
+## Minibatch size usually has to be 2 or fewer for these models, otherwise it will run out of memory
+## on the GPU when trying to allocate. For the largest model (a), this has to be 1.
+
 def pretrain(generator, generator_optimizer, epochs, minibatch_size, num_minibatch, input_shape, output_shape,
 	valid_generator, base_save_dir):
 	""" Pre-trains the given generator using the given parameters and valid data generator.
